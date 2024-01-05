@@ -1017,7 +1017,11 @@ async function main() {
                 JSON.stringify(
                     viewMatrix.map((k) => Math.round(k * 100) / 100),
                 );
-                console.log(JSON.stringify(getCamera(viewMatrix)));
+                var camera = getCamera(viewMatrix);
+                console.log("Position: " + JSON.stringify(camera.position));
+                console.log("Rotation: " + JSON.stringify(camera.rotation));
+                camera = removeZRotation(camera);
+                console.log("XY Rotation: " + JSON.stringify(camera.rotation));
         } else if (e.code === "KeyP") {
             carousel = true;
         }
