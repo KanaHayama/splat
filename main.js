@@ -185,6 +185,32 @@ function getViewMatrix(camera) {
     return camToWorld;
 }
 
+function getCamera(viewMatrix) {
+    const matrix = [
+        viewMatrix.slice(0, 4),
+        viewMatrix.slice(4, 8),
+        viewMatrix.slice(8, 12),
+        viewMatrix.slice(12, 16),
+    ];
+
+    const rotation = [
+        [matrix[0][0], matrix[0][1], matrix[0][2]],
+        [matrix[1][0], matrix[1][1], matrix[1][2]],
+        [matrix[2][0], matrix[2][1], matrix[2][2]],
+    ];
+
+    const position = [
+        -(matrix[3][0] * rotation[0][0] + matrix[3][1] * rotation[0][1] + matrix[3][2] * rotation[0][2]),
+        -(matrix[3][0] * rotation[1][0] + matrix[3][1] * rotation[1][1] + matrix[3][2] * rotation[1][2]),
+        -(matrix[3][0] * rotation[2][0] + matrix[3][1] * rotation[2][1] + matrix[3][2] * rotation[2][2]),
+    ];
+
+    return {
+        position,
+        rotation,
+    };
+}
+
 function multiply4(a, b) {
     return [
         b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12],
