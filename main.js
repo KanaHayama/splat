@@ -1452,7 +1452,7 @@ async function main() {
 
             const t = Math.sin((Date.now() - start) / 5000);
             inv = translate4(inv, 2.5 * t, 0, 6 * (1 - Math.cos(t)));
-            inv = rotate4(inv, -0.6 * t, 0, 1, 0);
+            inv = rotate4_aroundWorldAxisDirections(inv, -0.6 * t, 0, 1, 0);
 
             viewMatrix = invert4(inv);
         }
