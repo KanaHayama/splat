@@ -211,6 +211,40 @@ function getCamera(viewMatrix) {
     };
 }
 
+function removeZRotation(camera) {
+    function crossProduct(a, b) {
+        return [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ];
+    }
+    
+    function normalize(v) {
+        const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        return [v[0] / length, v[1] / length, v[2] / length];
+    }
+
+    const zAxis = [camera.rotation[2][0], camera.rotation[2][1], camera.rotation[2][2]];
+
+    let xAxis = crossProduct([0, 1, 0], zAxis);
+    xAxis = normalize(xAxis);
+
+    let yAxis = crossProduct(zAxis, xAxis);
+    yAxis = normalize(yAxis);
+
+    var newRotation = [
+        xAxis,
+        yAxis,
+        zAxis
+    ];
+    var result = {  
+        ...camera,
+        rotation: newRotation,
+    };
+    return result;
+}
+
 function multiply4(a, b) {
     return [
         b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12],
