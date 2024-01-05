@@ -302,6 +302,45 @@ function rotate4(a, rad, x, y, z) {
     ];
 }
 
+function rotate4_relatedToWorldAxes(a, rad, x, y, z) {
+    let len = Math.hypot(x, y, z);
+    x /= len;
+    y /= len;
+    z /= len;
+    let s = Math.sin(rad);
+    let c = Math.cos(rad);
+    let t = 1 - c;
+
+    let b00 = x * x * t + c;
+    let b01 = y * x * t + z * s;
+    let b02 = z * x * t - y * s;
+    let b10 = x * y * t - z * s;
+    let b11 = y * y * t + c;
+    let b12 = z * y * t + x * s;
+    let b20 = x * z * t + y * s;
+    let b21 = y * z * t - x * s;
+    let b22 = z * z * t + c;
+
+    return [
+        a[0] * b00 + a[1] * b10 + a[2] * b20,
+        a[0] * b01 + a[1] * b11 + a[2] * b21,
+        a[0] * b02 + a[1] * b12 + a[2] * b22,
+        a[3],
+        a[4] * b00 + a[5] * b10 + a[6] * b20,
+        a[4] * b01 + a[5] * b11 + a[6] * b21,
+        a[4] * b02 + a[5] * b12 + a[6] * b22,
+        a[7],
+        a[8] * b00 + a[9] * b10 + a[10] * b20,
+        a[8] * b01 + a[9] * b11 + a[10] * b21,
+        a[8] * b02 + a[9] * b12 + a[10] * b22,
+        a[11],
+        a[12] * b00 + a[13] * b10 + a[14] * b20,
+        a[12] * b01 + a[13] * b11 + a[14] * b21,
+        a[12] * b02 + a[13] * b12 + a[14] * b22,
+        a[15],
+    ];
+}
+
 function translate4(a, x, y, z) {
     return [
         ...a.slice(0, 12),
@@ -748,10 +787,8 @@ void main () {
 
 `.trim();
 
-let defaultViewMatrix = [
-    0.47, 0.04, 0.88, 0, -0.11, 0.99, 0.02, 0, -0.88, -0.11, 0.47, 0, 0.07,
-    0.03, 6.55, 1,
-];
+var defaultCamera = cameras[0];
+let defaultViewMatrix = getViewMatrix(defaultCamera);
 let viewMatrix = defaultViewMatrix;
 async function main() {
     let carousel = true;
@@ -1027,12 +1064,9 @@ async function main() {
             let d = 4;
 
             inv = translate4(inv, 0, 0, d);
-            inv = rotate4(inv, dx, 0, 1, 0);
+            inv = rotate4_relatedToWorldAxes(inv, dx, 0, 1, 0);
             inv = rotate4(inv, -dy, 1, 0, 0);
             inv = translate4(inv, 0, 0, -d);
-            // let postAngle = Math.atan2(inv[0], inv[10])
-            // inv = rotate4(inv, postAngle - preAngle, 0, 0, 1)
-            // console.log(postAngle)
             viewMatrix = invert4(inv);
 
             startX = e.clientX;
@@ -1097,7 +1131,7 @@ async function main() {
                 inv = translate4(inv, 0, 0, d);
                 // inv = translate4(inv,  -x, -y, -z);
                 // inv = translate4(inv,  x, y, z);
-                inv = rotate4(inv, dx, 0, 1, 0);
+                inv = rotate4_relatedToWorldAxes(inv, dx, 0, 1, 0);
                 inv = rotate4(inv, -dy, 1, 0, 0);
                 inv = translate4(inv, 0, 0, -d);
 
@@ -1203,8 +1237,8 @@ async function main() {
         if (activeKeys.includes("ArrowRight"))
             inv = translate4(inv, 0.03, 0, 0);
         // inv = rotate4(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyA")) inv = rotate4(inv, -0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyD")) inv = rotate4(inv, 0.01, 0, 1, 0);
+        if (activeKeys.includes("KeyA")) inv = rotate4_relatedToWorldAxes(inv, -0.01, 0, 1, 0);
+        if (activeKeys.includes("KeyD")) inv = rotate4_relatedToWorldAxes(inv, 0.01, 0, 1, 0);
         if (activeKeys.includes("KeyQ")) inv = rotate4(inv, 0.01, 0, 0, 1);
         if (activeKeys.includes("KeyE")) inv = rotate4(inv, -0.01, 0, 0, 1);
         if (activeKeys.includes("KeyW")) inv = rotate4(inv, 0.005, 1, 0, 0);
