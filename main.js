@@ -1273,8 +1273,8 @@ async function main() {
         // inv = rotate4(inv, 0.01, 0, 1, 0);
         if (activeKeys.includes("KeyA")) inv = rotate4_relatedToWorldAxes(inv, -0.01, 0, 1, 0);
         if (activeKeys.includes("KeyD")) inv = rotate4_relatedToWorldAxes(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyQ")) inv = rotate4(inv, 0.01, 0, 0, 1);
-        if (activeKeys.includes("KeyE")) inv = rotate4(inv, -0.01, 0, 0, 1);
+        if (activeKeys.includes("KeyE")) inv = rotate4(inv, 0.01, 0, 0, 1);
+        if (activeKeys.includes("KeyQ")) inv = rotate4(inv, -0.01, 0, 0, 1);
         if (activeKeys.includes("KeyW")) inv = rotate4(inv, 0.005, 1, 0, 0);
         if (activeKeys.includes("KeyS")) inv = rotate4(inv, -0.005, 1, 0, 0);
         if (activeKeys.includes("KeyZ")) inv = translate4(inv, 0, 0.1, 0);
