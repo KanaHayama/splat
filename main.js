@@ -946,6 +946,7 @@ async function main() {
                 JSON.stringify(
                     viewMatrix.map((k) => Math.round(k * 100) / 100),
                 );
+                console.log(JSON.stringify(getCamera(viewMatrix)));
         } else if (e.code === "KeyP") {
             carousel = true;
         }
