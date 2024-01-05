@@ -1,3 +1,68 @@
+var paths = {
+    "ict_floor1_outdoor": [
+        [-13.741228392280421,2.0085282450791824,34.84301499816954],
+        [5.020880362461914,0.3691011584957864,8.376079118872006],
+        [-2.492265326399518,-1.0182948266261886,-6.566904663874953],
+    ],
+};
+
+function findPath(modelName = "ict_floor1_outdoor") {
+    return paths[modelName];
+}
+
+var progress = 0;
+
+function lerpPath(path, a) {
+
+    function distance(a, b) {
+        return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
+    }
+
+    var totalDistance = 0;
+    var distances = [];
+    for (let i = 1; i < path.length; i++) {
+        var dist = distance(path[i-1], path[i]);
+        totalDistance += dist;
+        distances.push(dist);
+    }
+
+    a = Math.min(Math.max(a, 0), 1);
+    var targetDistance = a * totalDistance;
+    var sectionIndex = distances.findIndex((d) => {
+        if (targetDistance <= d) {
+            return true;
+        }
+        targetDistance -= d;
+    });
+    var sectionDistance = distances[sectionIndex];
+    var sectionA = targetDistance / sectionDistance;
+    var start = path[sectionIndex];
+    var end = path[sectionIndex + 1];
+    var result = [
+        start[0] + sectionA * (end[0] - start[0]),
+        start[1] + sectionA * (end[1] - start[1]),
+        start[2] + sectionA * (end[2] - start[2]),
+    ];
+    return result;
+}
+
+var defaultCamera = {
+    id: 0,
+    img_name: "00001",
+    width: 1959,
+    height: 1090,
+    position: [
+        -3.0089893469241797, -0.11086489695181866, -3.7527640949141428,
+    ],
+    rotation: [
+        [0.876134201218856, 0.06925962026449776, 0.47706599800804744],
+        [-0.04747421839895102, 0.9972110940209488, -0.057586739349882114],
+        [-0.4797239414934443, 0.027805376500959853, 0.8769787916452908],
+    ],
+    fy: 1164.6601287484507,
+    fx: 1159.5880733038064,
+};
+
 let cameras = [
     {
         id: 0,
@@ -236,7 +301,7 @@ function removeZRotation(camera) {
     var newRotation = [
         xAxis,
         yAxis,
-        zAxis
+        zAxis,
     ];
     var result = {  
         ...camera,
@@ -821,7 +886,7 @@ void main () {
 
 `.trim();
 
-var defaultCamera = cameras[0];
+defaultCamera.position = lerpPath(findPath(), progress);
 let defaultViewMatrix = getViewMatrix(defaultCamera);
 let viewMatrix = defaultViewMatrix;
 async function main() {
@@ -1045,34 +1110,35 @@ async function main() {
                     : e.deltaMode == 2
                     ? innerHeight
                     : 1;
-            let inv = invert4(viewMatrix);
+            
             if (e.shiftKey) {
+                let inv = invert4(viewMatrix);
                 inv = translate4(
                     inv,
                     (e.deltaX * scale) / innerWidth,
                     (e.deltaY * scale) / innerHeight,
                     0,
                 );
+                viewMatrix = invert4(inv);
             } else if (e.ctrlKey || e.metaKey) {
-                // inv = rotate4(inv,  (e.deltaX * scale) / innerWidth,  0, 0, 1);
-                // inv = translate4(inv,  0, (e.deltaY * scale) / innerHeight, 0);
-                // let preY = inv[13];
+                let inv = invert4(viewMatrix);
                 inv = translate4(
                     inv,
                     0,
                     0,
                     (-10 * (e.deltaY * scale)) / innerHeight,
                 );
-                // inv[13] = preY;
+                viewMatrix = invert4(inv);
             } else {
-                let d = 4;
-                inv = translate4(inv, 0, 0, d);
-                inv = rotate4(inv, -(e.deltaX * scale) / innerWidth, 0, 1, 0);
-                inv = rotate4(inv, (e.deltaY * scale) / innerHeight, 1, 0, 0);
-                inv = translate4(inv, 0, 0, -d);
+                var path = findPath();
+                var delta = e.deltaY * scale * 0.0003;
+                progress += delta;
+                progress = Math.max(0, Math.min(1, progress));
+                var newPosition = lerpPath(path, progress);
+                var camera = getCamera(viewMatrix);
+                camera.position = newPosition;
+                viewMatrix = getViewMatrix(camera);
             }
-
-            viewMatrix = invert4(inv);
         },
         { passive: false },
     );
