@@ -55,9 +55,9 @@ var defaultCamera = {
         -3.0089893469241797, -0.11086489695181866, -3.7527640949141428,
     ],
     rotation: [
-        [0.876134201218856, 0.06925962026449776, 0.47706599800804744],
-        [-0.04747421839895102, 0.9972110940209488, -0.057586739349882114],
-        [-0.4797239414934443, 0.027805376500959853, 0.8769787916452908],
+        [-0.8411879722506292,0,-0.5407428181130791],
+        [0.00981402413398568,0.9998352905582792,-0.015266849201425344],
+        [0.5406537526653964,-0.01814915298964442,-0.8410494206493426]
     ],
     fy: 1164.6601287484507,
     fx: 1159.5880733038064,
@@ -401,7 +401,7 @@ function rotate4(a, rad, x, y, z) {
     ];
 }
 
-function rotate4_relatedToWorldAxes(a, rad, x, y, z) {
+function rotate4_aroundWorldAxisDirections(a, rad, x, y, z) {
     let len = Math.hypot(x, y, z);
     x /= len;
     y /= len;
@@ -410,34 +410,35 @@ function rotate4_relatedToWorldAxes(a, rad, x, y, z) {
     let c = Math.cos(rad);
     let t = 1 - c;
 
-    let b00 = x * x * t + c;
-    let b01 = y * x * t + z * s;
-    let b02 = z * x * t - y * s;
-    let b10 = x * y * t - z * s;
-    let b11 = y * y * t + c;
-    let b12 = z * y * t + x * s;
-    let b20 = x * z * t + y * s;
-    let b21 = y * z * t - x * s;
-    let b22 = z * z * t + c;
-
-    return [
-        a[0] * b00 + a[1] * b10 + a[2] * b20,
-        a[0] * b01 + a[1] * b11 + a[2] * b21,
-        a[0] * b02 + a[1] * b12 + a[2] * b22,
-        a[3],
-        a[4] * b00 + a[5] * b10 + a[6] * b20,
-        a[4] * b01 + a[5] * b11 + a[6] * b21,
-        a[4] * b02 + a[5] * b12 + a[6] * b22,
-        a[7],
-        a[8] * b00 + a[9] * b10 + a[10] * b20,
-        a[8] * b01 + a[9] * b11 + a[10] * b21,
-        a[8] * b02 + a[9] * b12 + a[10] * b22,
-        a[11],
-        a[12] * b00 + a[13] * b10 + a[14] * b20,
-        a[12] * b01 + a[13] * b11 + a[14] * b21,
-        a[12] * b02 + a[13] * b12 + a[14] * b22,
-        a[15],
+    // Construct a rotation matrix for rotating around a world axis
+    let rot = [
+        x * x * t + c,        y * x * t + z * s,    z * x * t - y * s,    0,
+        x * y * t - z * s,    y * y * t + c,        z * y * t + x * s,    0,
+        x * z * t + y * s,    y * z * t - x * s,    z * z * t + c,        0,
+        0,                   0,                   0,                   1
     ];
+
+    // Get the original camera position
+    let tx = a[12], ty = a[13], tz = a[14];
+
+    // Move the camera to the world origin
+    let moveToOrigin = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        -tx, -ty, -tz, 1
+    ];
+
+    // Move the camera back to its original position
+    let moveBack = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        tx, ty, tz, 1
+    ];
+
+    // Combine all transformations
+    return multiply4(multiply4(moveBack, multiply4(rot, moveToOrigin)), a);
 }
 
 function translate4(a, x, y, z) {
@@ -1168,7 +1169,7 @@ async function main() {
             let d = 4;
 
             inv = translate4(inv, 0, 0, d);
-            inv = rotate4_relatedToWorldAxes(inv, dx, 0, 1, 0);
+            inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
             inv = rotate4(inv, -dy, 1, 0, 0);
             inv = translate4(inv, 0, 0, -d);
             viewMatrix = invert4(inv);
@@ -1235,7 +1236,7 @@ async function main() {
                 inv = translate4(inv, 0, 0, d);
                 // inv = translate4(inv,  -x, -y, -z);
                 // inv = translate4(inv,  x, y, z);
-                inv = rotate4_relatedToWorldAxes(inv, dx, 0, 1, 0);
+                inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
                 inv = rotate4(inv, -dy, 1, 0, 0);
                 inv = translate4(inv, 0, 0, -d);
 
@@ -1341,8 +1342,8 @@ async function main() {
         if (activeKeys.includes("ArrowRight"))
             inv = translate4(inv, 0.03, 0, 0);
         // inv = rotate4(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyA")) inv = rotate4_relatedToWorldAxes(inv, -0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyD")) inv = rotate4_relatedToWorldAxes(inv, 0.01, 0, 1, 0);
+        if (activeKeys.includes("KeyA")) inv = rotate4_aroundWorldAxisDirections(inv, -0.01, 0, 1, 0);
+        if (activeKeys.includes("KeyD")) inv = rotate4_aroundWorldAxisDirections(inv, 0.01, 0, 1, 0);
         if (activeKeys.includes("KeyE")) inv = rotate4(inv, 0.01, 0, 0, 1);
         if (activeKeys.includes("KeyQ")) inv = rotate4(inv, -0.01, 0, 0, 1);
         if (activeKeys.includes("KeyW")) inv = rotate4(inv, 0.005, 1, 0, 0);
