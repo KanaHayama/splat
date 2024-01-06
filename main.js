@@ -887,37 +887,82 @@ void main () {
 
 `.trim();
 
-defaultCamera.position = lerpPath(findPath(), progress);
-let defaultViewMatrix = getViewMatrix(defaultCamera);
-let viewMatrix = defaultViewMatrix;
 async function main() {
+    defaultCamera.position = lerpPath(findPath(), progress);
+    let defaultViewMatrix = getViewMatrix(defaultCamera);
+    let viewMatrix = defaultViewMatrix;
+
+    async function openOnlineModelReaderAsync(filename) {
+        const url = new URL(
+            filename,
+            "https://huggingface.co/ZongjianLi/usc-ict-splat/resolve/main/",
+            );
+            const req = await fetch(url, {
+            mode: "cors", // no-cors, *cors, same-origin
+            credentials: "omit", // include, *same-origin, omit
+        });
+        if (req.status != 200) {
+            throw new Error(req.status + " Unable to load " + req.url);
+        }
+        const length = parseInt(req.headers.get("content-length"));
+        const reader = req.body.getReader();
+        const bytesPerSample = 3 * 4 + 3 * 4 + 4 + 4;
+        const numSamples = length / bytesPerSample;
+        const downscale =  numSamples > 500000 ?
+            1 : 1 / devicePixelRatio;
+        console.log(numSamples, downscale);
+        return {
+            length,
+            bytesPerSample,
+            numSamples,
+            reader,
+            downscale,
+        };
+    }
+    
+    let stopLoading = false;
+    let vertexCount = 0;
+    
+    async function loadOnlineModelAsync(reader, bytesPerSample, splatData, worker) {
+        let bytesRead = 0;
+        let lastVertexCount = -1;
+        stopLoading = false;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (stopLoading) {
+                break;
+            }
+            if (done) {
+                worker.postMessage({
+                    buffer: splatData.buffer,
+                    vertexCount: Math.floor(bytesRead / bytesPerSample),
+                });
+                break;
+            }
+    
+            splatData.set(value, bytesRead);
+            bytesRead += value.length;
+    
+            if (vertexCount > lastVertexCount) {
+                worker.postMessage({
+                    buffer: splatData.buffer,
+                    vertexCount: Math.floor(bytesRead / bytesPerSample),
+                });
+                lastVertexCount = vertexCount;
+            }
+        }
+    }
+
     let carousel = true;
     const params = new URLSearchParams(location.search);
     try {
         viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
         carousel = false;
     } catch (err) {}
-    const url = new URL(
-        // "nike.splat",
-        // location.href,
-        params.get("url") || "ict_floor1_outdoor.splat",
-        "https://huggingface.co/ZongjianLi/usc-ict-splat/resolve/main/",
-    );
-    const req = await fetch(url, {
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "omit", // include, *same-origin, omit
-    });
-    console.log(req);
-    if (req.status != 200)
-        throw new Error(req.status + " Unable to load " + req.url);
 
-    const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
-    const reader = req.body.getReader();
-    let splatData = new Uint8Array(req.headers.get("content-length"));
-
-    const downsample =
-        splatData.length / rowLength > 500000 ? 1 : 1 / devicePixelRatio;
-    console.log(splatData.length / rowLength, downsample);
+    const { length: bufferLength, bytesPerSample, numSamples, reader, downscale,  } = 
+        await openOnlineModelReaderAsync(params.get("url") || "ict_floor1_outdoor.splat");
+    let splatData = new Uint8Array(bufferLength);
 
     const worker = new Worker(
         URL.createObjectURL(
@@ -1008,8 +1053,8 @@ async function main() {
 
         gl.uniform2fv(u_viewport, new Float32Array([innerWidth, innerHeight]));
 
-        gl.canvas.width = Math.round(innerWidth / downsample);
-        gl.canvas.height = Math.round(innerHeight / downsample);
+        gl.canvas.width = Math.round(innerWidth / downscale);
+        gl.canvas.height = Math.round(innerHeight / downscale);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         gl.uniformMatrix4fv(u_projection, false, projectionMatrix);
@@ -1287,7 +1332,6 @@ async function main() {
     );
 
     let jumpDelta = 0;
-    let vertexCount = 0;
 
     let lastFrame = 0;
     let avgFps = 0;
@@ -1468,7 +1512,7 @@ async function main() {
             document.getElementById("spinner").style.display = "";
             start = Date.now() + 2000;
         }
-        const progress = (100 * vertexCount) / (splatData.length / rowLength);
+        const progress = (100 * vertexCount) / numSamples;
         if (progress < 100) {
             document.getElementById("progress").style.width = progress + "%";
         } else {
@@ -1488,8 +1532,8 @@ async function main() {
                 cameras = JSON.parse(fr.result);
                 viewMatrix = getViewMatrix(cameras[0]);
                 projectionMatrix = getProjectionMatrix(
-                    camera.fx / downsample,
-                    camera.fy / downsample,
+                    camera.fx / downscale,
+                    camera.fy / downscale,
                     canvas.width,
                     canvas.height,
                 );
@@ -1502,7 +1546,7 @@ async function main() {
             stopLoading = true;
             fr.onload = () => {
                 splatData = new Uint8Array(fr.result);
-                console.log("Loaded", Math.floor(splatData.length / rowLength));
+                console.log("Loaded", Math.floor(numSamples));
 
                 if (
                     splatData[0] == 112 &&
@@ -1515,7 +1559,7 @@ async function main() {
                 } else {
                     worker.postMessage({
                         buffer: splatData.buffer,
-                        vertexCount: Math.floor(splatData.length / rowLength),
+                        vertexCount: Math.floor(numSamples),
                     });
                 }
             };
@@ -1543,30 +1587,7 @@ async function main() {
         selectFile(e.dataTransfer.files[0]);
     });
 
-    let bytesRead = 0;
-    let lastVertexCount = -1;
-    let stopLoading = false;
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done || stopLoading) break;
-
-        splatData.set(value, bytesRead);
-        bytesRead += value.length;
-
-        if (vertexCount > lastVertexCount) {
-            worker.postMessage({
-                buffer: splatData.buffer,
-                vertexCount: Math.floor(bytesRead / rowLength),
-            });
-            lastVertexCount = vertexCount;
-        }
-    }
-    if (!stopLoading)
-        worker.postMessage({
-            buffer: splatData.buffer,
-            vertexCount: Math.floor(bytesRead / rowLength),
-        });
+    await loadOnlineModelAsync(reader, bytesPerSample, splatData, worker);
 }
 
 main().catch((err) => {
