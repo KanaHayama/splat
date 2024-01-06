@@ -1166,14 +1166,9 @@ async function main() {
             let inv = invert4(viewMatrix);
             let dx = (5 * (e.clientX - startX)) / innerWidth;
             let dy = (5 * (e.clientY - startY)) / innerHeight;
-            let d = 4;
-
-            inv = translate4(inv, 0, 0, d);
             inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
             inv = rotate4(inv, -dy, 1, 0, 0);
-            inv = translate4(inv, 0, 0, -d);
             viewMatrix = invert4(inv);
-
             startX = e.clientX;
             startY = e.clientY;
         } else if (down == 2) {
@@ -1231,17 +1226,9 @@ async function main() {
                 let inv = invert4(viewMatrix);
                 let dx = (4 * (e.touches[0].clientX - startX)) / innerWidth;
                 let dy = (4 * (e.touches[0].clientY - startY)) / innerHeight;
-
-                let d = 4;
-                inv = translate4(inv, 0, 0, d);
-                // inv = translate4(inv,  -x, -y, -z);
-                // inv = translate4(inv,  x, y, z);
                 inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
                 inv = rotate4(inv, -dy, 1, 0, 0);
-                inv = translate4(inv, 0, 0, -d);
-
                 viewMatrix = invert4(inv);
-
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
@@ -1418,8 +1405,6 @@ async function main() {
         if (
             ["KeyJ", "KeyK", "KeyL", "KeyI"].some((k) => activeKeys.includes(k))
         ) {
-            let d = 4;
-            inv = translate4(inv, 0, 0, d);
             inv = rotate4(
                 inv,
                 activeKeys.includes("KeyJ")
@@ -1442,7 +1427,6 @@ async function main() {
                 0,
                 0,
             );
-            inv = translate4(inv, 0, 0, -d);
         }
 
         viewMatrix = invert4(inv);
