@@ -1,18 +1,26 @@
 // #region Paths
 
 const paths = {
-    "ict_floor1_outdoor": [
+    "ict_floor1_outdoor.splat": [
         [-13.741228392280421,2.0085282450791824,34.84301499816954],
-        [5.020880362461914,0.3691011584957864,8.376079118872006],
+        [8.438067774827054,0.4366644239805795,16.81441941627678],
         [-2.492265326399518,-1.0182948266261886,-6.566904663874953],
     ],
+    "ict_floor1_reception.splat" :[
+        [-0.2822178707261076,-0.017427221843289376,6.4792353427199885],
+        [2.5780888217020093,-0.3603230476233499,5.050685604267946],
+        [0.527493384986706,0.004725803746391595,-1.8058292962813047],
+        [-2.0546145340115056,-0.17564819832295947,-2.535695939885896],
+        [-2.4739771358078935,-0.5278851873539432,-4.0325840916548845],
+    ],
+    "ict_floor2_lobby.splat" : [
+        [2.176022629196745,-0.014131692091076925,-2.2046541783879667],
+        [0.2901195595137631,-0.07971107103846872,-3.341345037464995],
+        [-0.6384727718834645,-0.05265282077926062,-2.4698083542375695],
+        [1.539654760991623,-0.05168961029430345,-1.2371242596691778],
+        [-2.7040290799700486,-0.11204782204213892,6.660166563189479],
+    ],
 };
-
-function findPath(modelName = "ict_floor1_outdoor") {
-    return paths[modelName];
-}
-
-let progress = 0;
 
 function lerpPath(path, a) {
 
@@ -31,7 +39,7 @@ function lerpPath(path, a) {
     a = Math.min(Math.max(a, 0), 1);
     let targetDistance = a * totalDistance;
     let sectionIndex = distances.findIndex((d) => {
-        if (targetDistance <= d) {
+        if (targetDistance <= d * 1.001) {// handle floating point errors
             return true;
         }
         targetDistance -= d;
@@ -50,22 +58,28 @@ function lerpPath(path, a) {
 // #endregion Paths
 
 // #region Cameras
-
-let defaultCamera = {
-    id: 0,
-    img_name: "00001",
-    width: 1959,
-    height: 1090,
-    position: [
-        -3.0089893469241797, -0.11086489695181866, -3.7527640949141428,
-    ],
-    rotation: [
-        [-0.8411879722506292,0,-0.5407428181130791],
-        [0.00981402413398568,0.9998352905582792,-0.015266849201425344],
-        [0.5406537526653964,-0.01814915298964442,-0.8410494206493426]
-    ],
-    fy: 1164.6601287484507,
-    fx: 1159.5880733038064,
+const startingCameras = {
+    "ict_floor1_outdoor.splat":{
+        rotation: [
+            [-0.8011665506336187,0,0.5984414408660459],[-0.006315963311867469,0.9999443047733072,-0.008455528302275443],[-0.5984081105343376,-0.010554020628530062,-0.8011219294809667]
+        ],
+        fy: 1164.6601287484507,
+        fx: 1159.5880733038064,
+    },
+    "ict_floor1_reception.splat": {
+        rotation: [
+            [-0.9385771534286411,0,-0.3450694525190388],[-0.007451688717321696,0.9997668061866828,0.020268339412496193],[0.3449889844575394,0.02159475045653426,-0.9383582830431211]
+        ],
+        fy: 1164.6601287484507,
+        fx: 1159.5880733038064,
+    },
+    "ict_floor2_lobby.splat":{
+        rotation: [
+            [-0.45824555443903864,0,-0.8888256363521803],[0.00902828526121026,0.9999484108220609,-0.004654649253971137],[0.8887797825683187,-0.010157543720570043,-0.45822191392761613]
+        ],
+        fy: 1164.6601287484507,
+        fx: 1159.5880733038064,
+    }
 };
 
 let cameras = [
@@ -905,11 +919,19 @@ void main () {
 // #region Main
 
 async function main() {
-    defaultCamera.position = lerpPath(findPath(), progress);
-    let defaultViewMatrix = getViewMatrix(defaultCamera);
-    let viewMatrix = defaultViewMatrix;
+    const bytesPerSample = 3 * 4 + 3 * 4 + 4 + 4;
+    let bufferLength, numSamples, downscale, splatData;
+    let reader;
 
-    async function openOnlineModelReaderAsync(filename) {
+    let path, pathProgress;
+    let viewMatrix, startingViewMatrix, carousel;
+    
+    let stopLoading;
+    let vertexCount;
+    
+    // #region Online Model
+    let modelName;
+    async function openOnlineModelAsync(filename) {
         const url = new URL(
             filename,
             "https://huggingface.co/ZongjianLi/usc-ict-splat/resolve/main/",
@@ -921,26 +943,26 @@ async function main() {
         if (req.status != 200) {
             throw new Error(req.status + " Unable to load " + req.url);
         }
-        const length = parseInt(req.headers.get("content-length"));
-        const reader = req.body.getReader();
-        const bytesPerSample = 3 * 4 + 3 * 4 + 4 + 4;
-        const numSamples = length / bytesPerSample;
-        const downscale =  numSamples > 500000 ?
+        modelName = filename;
+        pathProgress = 0;
+        path = paths[modelName];
+        const startingCamera = startingCameras[modelName]
+        startingCamera.position = lerpPath(path, pathProgress);
+        camera = startingCamera;
+        startingViewMatrix = getViewMatrix(startingCamera);
+        viewMatrix = startingViewMatrix;
+        carousel = true;
+        vertexCount = 0;
+        bufferLength = parseInt(req.headers.get("content-length"));
+        reader = req.body.getReader();
+        numSamples = length / bytesPerSample;
+        downscale =  numSamples > 500000 ?
             1 : 1 / devicePixelRatio;
+        splatData = new Uint8Array(bufferLength);
         console.log(numSamples, downscale);
-        return {
-            length,
-            bytesPerSample,
-            numSamples,
-            reader,
-            downscale,
-        };
     }
-    
-    let stopLoading = false;
-    let vertexCount = 0;
-    
-    async function loadOnlineModelAsync(reader, bytesPerSample, splatData, worker) {
+
+    async function loadOnlineModelAsync() {
         let bytesRead = 0;
         let lastVertexCount = -1;
         stopLoading = false;
@@ -969,17 +991,31 @@ async function main() {
             }
         }
     }
-
-    let carousel = true;
+    // #endregion Online Model
+    
     const params = new URLSearchParams(location.search);
+    await openOnlineModelAsync(params.get("url") || "ict_floor1_outdoor.splat");
+
+    // #region Camera
+    function constrainCameraToProgress(delta) {
+        if (!path) {
+            return;
+        }
+        if (delta) {
+            pathProgress += delta;
+            pathProgress = Math.max(0, Math.min(1, pathProgress));
+        }
+        const newPosition = lerpPath(path, pathProgress);
+        const camera = getCamera(viewMatrix);
+        camera.position = newPosition;
+        viewMatrix = getViewMatrix(camera);
+    }
+    // #region Camera
+
     try {
         viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
         carousel = false;
     } catch (err) {}
-
-    const { length: bufferLength, bytesPerSample, numSamples, reader, downscale,  } = 
-        await openOnlineModelReaderAsync(params.get("url") || "ict_floor1_outdoor.splat");
-    let splatData = new Uint8Array(bufferLength);
     
     // #region Canvas
     const canvas = document.getElementById("canvas");
@@ -1198,14 +1234,8 @@ async function main() {
                 );
                 viewMatrix = invert4(inv);
             } else {
-                let path = findPath();
-                let delta = e.deltaY * scale * 0.0003;
-                progress += delta;
-                progress = Math.max(0, Math.min(1, progress));
-                let newPosition = lerpPath(path, progress);
-                let camera = getCamera(viewMatrix);
-                camera.position = newPosition;
-                viewMatrix = getViewMatrix(camera);
+                let delta = e.deltaY * scale * 0.0002;
+                constrainCameraToProgress(delta);
             }
         },
         { passive: false },
@@ -1357,7 +1387,7 @@ async function main() {
 
     let lastFrame = 0;
     let avgFps = 0;
-    let start = 0;
+    let startTime = 0;
 
     window.addEventListener("gamepadconnected", (e) => {
         const gp = navigator.getGamepads()[e.gamepad.index];
@@ -1405,8 +1435,8 @@ async function main() {
         if (activeKeys.includes("KeyQ")) inv = rotate4(inv, -0.01, 0, 0, 1);
         if (activeKeys.includes("KeyW")) inv = rotate4(inv, 0.005, 1, 0, 0);
         if (activeKeys.includes("KeyS")) inv = rotate4(inv, -0.005, 1, 0, 0);
-        if (activeKeys.includes("KeyZ")) inv = translate4(inv, 0, 0.1, 0);
-        if (activeKeys.includes("KeyC")) inv = translate4(inv, 0, -0.1, 0);
+        if (activeKeys.includes("KeyZ")) inv = translate4(inv, 0, 0.05, 0);
+        if (activeKeys.includes("KeyC")) inv = translate4(inv, 0, -0.05, 0);
 
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         let isJumping = activeKeys.includes("Space");
@@ -1503,10 +1533,9 @@ async function main() {
         // #endregion Frame Based Inputs
 
         if (carousel) {
-            let inv = invert4(defaultViewMatrix);
+            let inv = invert4(startingViewMatrix);
 
-            const t = Math.sin((Date.now() - start) / 5000);
-            inv = translate4(inv, 2.5 * t, 0, 6 * (1 - Math.cos(t)));
+            const t = Math.sin((Date.now() - startTime) / 5000);
             inv = rotate4_aroundWorldAxisDirections(inv, -0.6 * t, 0, 1, 0);
 
             viewMatrix = invert4(inv);
@@ -1537,7 +1566,7 @@ async function main() {
         } else {
             gl.clear(gl.COLOR_BUFFER_BIT);
             document.getElementById("spinner").style.display = "";
-            start = Date.now() + 2000;
+            startTime = Date.now() + 2000;
         }
         const progress = (100 * vertexCount) / numSamples;
         if (progress < 100) {
@@ -1586,7 +1615,8 @@ async function main() {
             stopLoading = true;
             fr.onload = () => {
                 splatData = new Uint8Array(fr.result);
-                const numSamples = splatData.byteLength / bytesPerSample;
+                bufferLength = splatData.byteLength;
+                numSamples = bufferLength / bytesPerSample;
                 console.log("Loaded", Math.floor(numSamples));
 
                 if (
@@ -1617,7 +1647,25 @@ async function main() {
     });
     // #endregion File Drop
 
-    await loadOnlineModelAsync(reader, bytesPerSample, splatData, worker);
+    // #region Minimap Navigation
+    function createModelButtonHandler(targetModelName) {
+        return async () => {
+            if (targetModelName === modelName) {
+                return;
+            }
+            await openOnlineModelAsync(targetModelName);
+            await loadOnlineModelAsync();
+        }
+    }
+    const outdoorButton = document.getElementById("outdoor-button");
+    const receptionButton = document.getElementById("reception-button");
+    const lobbyButton = document.getElementById("lobby-button");
+    outdoorButton.addEventListener("click", createModelButtonHandler("ict_floor1_outdoor.splat"));
+    receptionButton.addEventListener("click", createModelButtonHandler("ict_floor1_reception.splat"));
+    lobbyButton.addEventListener("click", createModelButtonHandler("ict_floor2_lobby.splat"));
+    // #endregion Minimap Navigation
+
+    await loadOnlineModelAsync();
 }
 
 main().catch((err) => {
