@@ -1,4 +1,6 @@
-let paths = {
+// #region Paths
+
+const paths = {
     "ict_floor1_outdoor": [
         [-13.741228392280421,2.0085282450791824,34.84301499816954],
         [5.020880362461914,0.3691011584957864,8.376079118872006],
@@ -45,6 +47,9 @@ function lerpPath(path, a) {
     ];
     return result;
 }
+// #endregion Paths
+
+// #region Cameras
 
 let defaultCamera = {
     id: 0,
@@ -451,6 +456,10 @@ function translate4(a, x, y, z) {
     ];
 }
 
+// #endregion Cameras
+
+// #region Worker Implementation
+
 function createWorker(self) {
     let buffer;
     let vertexCount = 0;
@@ -808,6 +817,10 @@ function createWorker(self) {
     };
 }
 
+// #endregion Worker Implementation
+
+// #region Shaders
+
 const vertexShaderSource = `
 #version 300 es
 precision highp float;
@@ -887,6 +900,10 @@ void main () {
 
 `.trim();
 
+// #endregion Shaders
+
+// #region Main
+
 async function main() {
     defaultCamera.position = lerpPath(findPath(), progress);
     let defaultViewMatrix = getViewMatrix(defaultCamera);
@@ -963,15 +980,8 @@ async function main() {
     const { length: bufferLength, bytesPerSample, numSamples, reader, downscale,  } = 
         await openOnlineModelReaderAsync(params.get("url") || "ict_floor1_outdoor.splat");
     let splatData = new Uint8Array(bufferLength);
-
-    const worker = new Worker(
-        URL.createObjectURL(
-            new Blob(["(", createWorker.toString(), ")(self)"], {
-                type: "application/javascript",
-            }),
-        ),
-    );
-
+    
+    // #region Canvas
     const canvas = document.getElementById("canvas");
     const fps = document.getElementById("fps");
     let projectionMatrix;
@@ -1061,8 +1071,18 @@ async function main() {
     };
 
     window.addEventListener("resize", resize);
+    // #endregion Canvas
+
     resize();
 
+    // #region Worker Setup
+    const worker = new Worker(
+        URL.createObjectURL(
+            new Blob(["(", createWorker.toString(), ")(self)"], {
+                type: "application/javascript",
+            }),
+        ),
+    );
     worker.onmessage = (e) => {
         if (e.data.buffer) {
             splatData = new Uint8Array(e.data.buffer);
@@ -1111,7 +1131,9 @@ async function main() {
             vertexCount = e.data.vertexCount;
         }
     };
+    // #endregion Worker Setup
 
+    // #region Basic Inputs
     let activeKeys = [];
 
     window.addEventListener("keydown", (e) => {
@@ -1347,9 +1369,13 @@ async function main() {
         console.log("Gamepad disconnected");
     });
 
+    // #endregion Basic Inputs
+
+    // #region Frame Handler
     let leftGamepadTrigger, rightGamepadTrigger;
 
     const frame = (now) => {
+        // #region Frame Based Inputs
         let inv = invert4(viewMatrix);
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
@@ -1474,6 +1500,7 @@ async function main() {
         }
 
         viewMatrix = invert4(inv);
+        // #endregion Frame Based Inputs
 
         if (carousel) {
             let inv = invert4(defaultViewMatrix);
@@ -1522,9 +1549,22 @@ async function main() {
         lastFrame = now;
         requestAnimationFrame(frame);
     };
+    // #endregion Frame Handling
 
     frame();
 
+    window.addEventListener("hashchange", (e) => {
+        try {
+            viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
+            carousel = false;
+        } catch (err) {}
+    });
+
+    // #region File Drop
+    const preventDefault = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
     const selectFile = (file) => {
         const fr = new FileReader();
         if (/\.json$/i.test(file.name)) {
@@ -1546,6 +1586,7 @@ async function main() {
             stopLoading = true;
             fr.onload = () => {
                 splatData = new Uint8Array(fr.result);
+                const numSamples = splatData.byteLength / bytesPerSample;
                 console.log("Loaded", Math.floor(numSamples));
 
                 if (
@@ -1566,18 +1607,6 @@ async function main() {
             fr.readAsArrayBuffer(file);
         }
     };
-
-    window.addEventListener("hashchange", (e) => {
-        try {
-            viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
-            carousel = false;
-        } catch (err) {}
-    });
-
-    const preventDefault = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
     document.addEventListener("dragenter", preventDefault);
     document.addEventListener("dragover", preventDefault);
     document.addEventListener("dragleave", preventDefault);
@@ -1586,6 +1615,7 @@ async function main() {
         e.stopPropagation();
         selectFile(e.dataTransfer.files[0]);
     });
+    // #endregion File Drop
 
     await loadOnlineModelAsync(reader, bytesPerSample, splatData, worker);
 }
@@ -1594,3 +1624,5 @@ main().catch((err) => {
     document.getElementById("spinner").style.display = "none";
     document.getElementById("message").innerText = err.toString();
 });
+
+// #endregion Main
