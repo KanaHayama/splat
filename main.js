@@ -1,4 +1,4 @@
-var paths = {
+let paths = {
     "ict_floor1_outdoor": [
         [-13.741228392280421,2.0085282450791824,34.84301499816954],
         [5.020880362461914,0.3691011584957864,8.376079118872006],
@@ -10,7 +10,7 @@ function findPath(modelName = "ict_floor1_outdoor") {
     return paths[modelName];
 }
 
-var progress = 0;
+let progress = 0;
 
 function lerpPath(path, a) {
 
@@ -18,27 +18,27 @@ function lerpPath(path, a) {
         return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
     }
 
-    var totalDistance = 0;
-    var distances = [];
+    let totalDistance = 0;
+    let distances = [];
     for (let i = 1; i < path.length; i++) {
-        var dist = distance(path[i-1], path[i]);
+        let dist = distance(path[i-1], path[i]);
         totalDistance += dist;
         distances.push(dist);
     }
 
     a = Math.min(Math.max(a, 0), 1);
-    var targetDistance = a * totalDistance;
-    var sectionIndex = distances.findIndex((d) => {
+    let targetDistance = a * totalDistance;
+    let sectionIndex = distances.findIndex((d) => {
         if (targetDistance <= d) {
             return true;
         }
         targetDistance -= d;
     });
-    var sectionDistance = distances[sectionIndex];
-    var sectionA = targetDistance / sectionDistance;
-    var start = path[sectionIndex];
-    var end = path[sectionIndex + 1];
-    var result = [
+    let sectionDistance = distances[sectionIndex];
+    let sectionA = targetDistance / sectionDistance;
+    let start = path[sectionIndex];
+    let end = path[sectionIndex + 1];
+    let result = [
         start[0] + sectionA * (end[0] - start[0]),
         start[1] + sectionA * (end[1] - start[1]),
         start[2] + sectionA * (end[2] - start[2]),
@@ -46,7 +46,7 @@ function lerpPath(path, a) {
     return result;
 }
 
-var defaultCamera = {
+let defaultCamera = {
     id: 0,
     img_name: "00001",
     width: 1959,
@@ -298,12 +298,12 @@ function removeZRotation(camera) {
     let yAxis = crossProduct(zAxis, xAxis);
     yAxis = normalize(yAxis);
 
-    var newRotation = [
+    let newRotation = [
         xAxis,
         yAxis,
         zAxis,
     ];
-    var result = {  
+    let result = {  
         ...camera,
         rotation: newRotation,
     };
@@ -465,18 +465,18 @@ function createWorker(self) {
     let depthIndex = new Uint32Array();
     let lastVertexCount = 0;
 
-    var _floatView = new Float32Array(1);
-    var _int32View = new Int32Array(_floatView.buffer);
+    let _floatView = new Float32Array(1);
+    let _int32View = new Int32Array(_floatView.buffer);
 
     function floatToHalf(float) {
         _floatView[0] = float;
-        var f = _int32View[0];
+        let f = _int32View[0];
 
-        var sign = (f >> 31) & 0x0001;
-        var exp = (f >> 23) & 0x00ff;
-        var frac = f & 0x007fffff;
+        let sign = (f >> 31) & 0x0001;
+        let exp = (f >> 23) & 0x00ff;
+        let frac = f & 0x007fffff;
 
-        var newExp;
+        let newExp;
         if (exp == 0) {
             newExp = 0;
         } else if (exp < 113) {
@@ -506,11 +506,11 @@ function createWorker(self) {
         const f_buffer = new Float32Array(buffer);
         const u_buffer = new Uint8Array(buffer);
 
-        var texwidth = 1024 * 2; // Set to your desired width
-        var texheight = Math.ceil((2 * vertexCount) / texwidth); // Set to your desired height
-        var texdata = new Uint32Array(texwidth * texheight * 4); // 4 components per pixel (RGBA)
-        var texdata_c = new Uint8Array(texdata.buffer);
-        var texdata_f = new Float32Array(texdata.buffer);
+        let texwidth = 1024 * 2; // Set to your desired width
+        let texheight = Math.ceil((2 * vertexCount) / texwidth); // Set to your desired height
+        let texdata = new Uint32Array(texwidth * texheight * 4); // 4 components per pixel (RGBA)
+        let texdata_c = new Uint8Array(texdata.buffer);
+        let texdata_f = new Float32Array(texdata.buffer);
 
         // Here we convert from a .splat file buffer into a texture
         // With a little bit more foresight perhaps this texture file
@@ -1028,10 +1028,10 @@ async function main() {
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
 
-    var texture = gl.createTexture();
+    let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    var u_textureLocation = gl.getUniformLocation(program, "u_texture");
+    let u_textureLocation = gl.getUniformLocation(program, "u_texture");
     gl.uniform1i(u_textureLocation, 0);
 
     const indexBuffer = gl.createBuffer();
@@ -1128,7 +1128,7 @@ async function main() {
                 JSON.stringify(
                     viewMatrix.map((k) => Math.round(k * 100) / 100),
                 );
-                var camera = getCamera(viewMatrix);
+                let camera = getCamera(viewMatrix);
                 console.log("Position: " + JSON.stringify(camera.position));
                 console.log("Rotation: " + JSON.stringify(camera.rotation));
                 camera = removeZRotation(camera);
@@ -1176,12 +1176,12 @@ async function main() {
                 );
                 viewMatrix = invert4(inv);
             } else {
-                var path = findPath();
-                var delta = e.deltaY * scale * 0.0003;
+                let path = findPath();
+                let delta = e.deltaY * scale * 0.0003;
                 progress += delta;
                 progress = Math.max(0, Math.min(1, progress));
-                var newPosition = lerpPath(path, progress);
-                var camera = getCamera(viewMatrix);
+                let newPosition = lerpPath(path, progress);
+                let camera = getCamera(viewMatrix);
                 camera.position = newPosition;
                 viewMatrix = getViewMatrix(camera);
             }
