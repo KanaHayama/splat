@@ -1409,32 +1409,34 @@ async function main() {
         let inv = invert4(viewMatrix);
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
-        if (activeKeys.includes("ArrowUp")) {
+        if (activeKeys.includes("KeyW")) {
             if (shiftKey) {
                 inv = translate4(inv, 0, -0.03, 0);
             } else {
                 inv = translate4(inv, 0, 0, 0.1);
             }
         }
-        if (activeKeys.includes("ArrowDown")) {
+        if (activeKeys.includes("KeyS")) {
             if (shiftKey) {
                 inv = translate4(inv, 0, 0.03, 0);
             } else {
                 inv = translate4(inv, 0, 0, -0.1);
             }
         }
-        if (activeKeys.includes("ArrowLeft"))
+        if (activeKeys.includes("KeyA")) {
             inv = translate4(inv, -0.03, 0, 0);
-        //
-        if (activeKeys.includes("ArrowRight"))
+        }
+        
+        if (activeKeys.includes("KeyD")) {
             inv = translate4(inv, 0.03, 0, 0);
-        // inv = rotate4(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyA")) inv = rotate4_aroundWorldAxisDirections(inv, -0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyD")) inv = rotate4_aroundWorldAxisDirections(inv, 0.01, 0, 1, 0);
+        }
+    
+        if (activeKeys.includes("ArrowLeft")) inv = rotate4_aroundWorldAxisDirections(inv, -0.01, 0, 1, 0);
+        if (activeKeys.includes("ArrowRight")) inv = rotate4_aroundWorldAxisDirections(inv, 0.01, 0, 1, 0);
         if (activeKeys.includes("KeyE")) inv = rotate4(inv, 0.01, 0, 0, 1);
         if (activeKeys.includes("KeyQ")) inv = rotate4(inv, -0.01, 0, 0, 1);
-        if (activeKeys.includes("KeyW")) inv = rotate4(inv, 0.005, 1, 0, 0);
-        if (activeKeys.includes("KeyS")) inv = rotate4(inv, -0.005, 1, 0, 0);
+        if (activeKeys.includes("ArrowUp")) inv = rotate4(inv, 0.005, 1, 0, 0);
+        if (activeKeys.includes("ArrowDown")) inv = rotate4(inv, -0.005, 1, 0, 0);
         if (activeKeys.includes("KeyZ")) inv = translate4(inv, 0, 0.05, 0);
         if (activeKeys.includes("KeyC")) inv = translate4(inv, 0, -0.05, 0);
 
