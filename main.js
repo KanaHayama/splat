@@ -295,6 +295,11 @@ function getCamera(viewMatrix) {
     };
 }
 
+function normalize(v) {
+    const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return length > 0 ? [v[0] / length, v[1] / length, v[2] / length] : [0, 0, 0];
+}
+
 function removeZRotation(camera) {
     function crossProduct(a, b) {
         return [
@@ -302,11 +307,6 @@ function removeZRotation(camera) {
             a[2] * b[0] - a[0] * b[2],
             a[0] * b[1] - a[1] * b[0],
         ];
-    }
-    
-    function normalize(v) {
-        const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        return [v[0] / length, v[1] / length, v[2] / length];
     }
 
     const zAxis = [camera.rotation[2][0], camera.rotation[2][1], camera.rotation[2][2]];
@@ -420,7 +420,7 @@ function rotate4(a, rad, x, y, z) {
     ];
 }
 
-function rotate4_aroundWorldAxisDirections(a, rad, x, y, z) {
+function rotate4_walk(a, rad, x, y, z) {
     let len = Math.hypot(x, y, z);
     x /= len;
     y /= len;
@@ -467,6 +467,39 @@ function translate4(a, x, y, z) {
         a[1] * x + a[5] * y + a[9] * z + a[13],
         a[2] * x + a[6] * y + a[10] * z + a[14],
         a[3] * x + a[7] * y + a[11] * z + a[15],
+    ];
+}
+
+function translate4_walk(a, x, y, z) {
+    // Extract the camera's local axes from the view matrix
+    let localX = [a[0], a[1], a[2]];
+    let localY = [a[4], a[5], a[6]];
+    let localZ = [a[8], a[9], a[10]];
+
+    // Adjust local Z axis to be parallel to the world XZ plane
+    localZ[1] = 0; // Set the y-component to 0
+
+    // Adjust local X axis to be parallel to the world XZ plane
+    localX[1] = 0; // Set the y-component to 0
+
+    // Normalize the adjusted axes
+    localX = normalize(localX);
+    localZ = normalize(localZ);
+
+    // Compute the new translation vector
+    let translation = [
+        localX[0] * x + localY[0] * y + localZ[0] * z,
+        localX[1] * x + localY[1] * y + localZ[1] * z,
+        localX[2] * x + localY[2] * y + localZ[2] * z
+    ];
+
+    // Apply the translation to the view matrix
+    return [
+        ...a.slice(0, 12),
+        a[12] + translation[0],
+        a[13] + translation[1],
+        a[14] + translation[2],
+        a[15]
     ];
 }
 
@@ -1263,7 +1296,7 @@ async function main() {
             let inv = invert4(viewMatrix);
             let dx = (5 * (e.clientX - startX)) / innerWidth;
             let dy = (5 * (e.clientY - startY)) / innerHeight;
-            inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
+            inv = rotate4_walk(inv, dx, 0, 1, 0);
             inv = rotate4(inv, -dy, 1, 0, 0);
             viewMatrix = invert4(inv);
             startX = e.clientX;
@@ -1323,7 +1356,7 @@ async function main() {
                 let inv = invert4(viewMatrix);
                 let dx = (4 * (e.touches[0].clientX - startX)) / innerWidth;
                 let dy = (4 * (e.touches[0].clientY - startY)) / innerHeight;
-                inv = rotate4_aroundWorldAxisDirections(inv, dx, 0, 1, 0);
+                inv = rotate4_walk(inv, dx, 0, 1, 0);
                 inv = rotate4(inv, -dy, 1, 0, 0);
                 viewMatrix = invert4(inv);
                 startX = e.touches[0].clientX;
@@ -1410,35 +1443,47 @@ async function main() {
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
         if (activeKeys.includes("KeyW")) {
-            if (shiftKey) {
-                inv = translate4(inv, 0, -0.03, 0);
-            } else {
-                inv = translate4(inv, 0, 0, 0.1);
-            }
+            inv = translate4_walk(inv, 0, 0, 0.1);
         }
         if (activeKeys.includes("KeyS")) {
-            if (shiftKey) {
-                inv = translate4(inv, 0, 0.03, 0);
-            } else {
-                inv = translate4(inv, 0, 0, -0.1);
-            }
+            inv = translate4_walk(inv, 0, 0, -0.1);
         }
         if (activeKeys.includes("KeyA")) {
-            inv = translate4(inv, -0.03, 0, 0);
+            inv = translate4_walk(inv, -0.05, 0, 0);
         }
-        
         if (activeKeys.includes("KeyD")) {
-            inv = translate4(inv, 0.03, 0, 0);
+            inv = translate4_walk(inv, 0.05, 0, 0);
         }
-    
-        if (activeKeys.includes("ArrowLeft")) inv = rotate4_aroundWorldAxisDirections(inv, -0.01, 0, 1, 0);
-        if (activeKeys.includes("ArrowRight")) inv = rotate4_aroundWorldAxisDirections(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyC")) inv = rotate4(inv, 0.01, 0, 0, 1);
-        if (activeKeys.includes("KeyZ")) inv = rotate4(inv, -0.01, 0, 0, 1);
-        if (activeKeys.includes("ArrowUp")) inv = rotate4(inv, 0.005, 1, 0, 0);
-        if (activeKeys.includes("ArrowDown")) inv = rotate4(inv, -0.005, 1, 0, 0);
-        if (activeKeys.includes("KeyQ")) inv = translate4(inv, 0, 0.05, 0);
-        if (activeKeys.includes("KeyE")) inv = translate4(inv, 0, -0.05, 0);
+        if (activeKeys.includes("KeyQ")) {
+            inv = translate4(inv, 0, 0.05, 0);
+        }
+        if (activeKeys.includes("KeyE")) {
+            inv = translate4(inv, 0, -0.05, 0);
+        }
+        if (activeKeys.includes("KeyC")) {
+            inv = rotate4(inv, 0.01, 0, 0, 1);
+        }
+        if (activeKeys.includes("KeyZ")) {
+            inv = rotate4(inv, -0.01, 0, 0, 1);
+        }
+        if (activeKeys.includes("KeyX")) {
+            let matrix = invert4(viewMatrix);
+            let camera = getCamera(matrix);
+            camera = removeZRotation(camera);
+            inv = getViewMatrix(camera);
+        }
+        if (activeKeys.includes("ArrowLeft")) {
+            inv = rotate4_walk(inv, -0.01, 0, 1, 0);
+        }
+        if (activeKeys.includes("ArrowRight")) {
+            inv = rotate4_walk(inv, 0.01, 0, 1, 0);
+        }
+        if (activeKeys.includes("ArrowUp")) {
+            inv = rotate4(inv, 0.005, 1, 0, 0);
+        }
+        if (activeKeys.includes("ArrowDown")) {
+            inv = rotate4(inv, -0.005, 1, 0, 0);
+        }
 
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         let isJumping = activeKeys.includes("Space");
@@ -1538,7 +1583,7 @@ async function main() {
             let inv = invert4(startingViewMatrix);
 
             const t = Math.sin((Date.now() - startTime) / 5000);
-            inv = rotate4_aroundWorldAxisDirections(inv, -0.6 * t, 0, 1, 0);
+            inv = rotate4_walk(inv, -0.6 * t, 0, 1, 0);
 
             viewMatrix = invert4(inv);
         }
