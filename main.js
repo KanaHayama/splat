@@ -1433,12 +1433,12 @@ async function main() {
     
         if (activeKeys.includes("ArrowLeft")) inv = rotate4_aroundWorldAxisDirections(inv, -0.01, 0, 1, 0);
         if (activeKeys.includes("ArrowRight")) inv = rotate4_aroundWorldAxisDirections(inv, 0.01, 0, 1, 0);
-        if (activeKeys.includes("KeyE")) inv = rotate4(inv, 0.01, 0, 0, 1);
-        if (activeKeys.includes("KeyQ")) inv = rotate4(inv, -0.01, 0, 0, 1);
+        if (activeKeys.includes("KeyC")) inv = rotate4(inv, 0.01, 0, 0, 1);
+        if (activeKeys.includes("KeyZ")) inv = rotate4(inv, -0.01, 0, 0, 1);
         if (activeKeys.includes("ArrowUp")) inv = rotate4(inv, 0.005, 1, 0, 0);
         if (activeKeys.includes("ArrowDown")) inv = rotate4(inv, -0.005, 1, 0, 0);
-        if (activeKeys.includes("KeyZ")) inv = translate4(inv, 0, 0.05, 0);
-        if (activeKeys.includes("KeyC")) inv = translate4(inv, 0, -0.05, 0);
+        if (activeKeys.includes("KeyQ")) inv = translate4(inv, 0, 0.05, 0);
+        if (activeKeys.includes("KeyE")) inv = translate4(inv, 0, -0.05, 0);
 
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         let isJumping = activeKeys.includes("Space");
