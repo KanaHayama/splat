@@ -1220,7 +1220,7 @@ async function main() {
         // if (document.activeElement != document.body) return;
         carousel = false;
         if (!activeKeys.includes(e.code)) activeKeys.push(e.code);
-        if (/\d/.test(e.key)) {
+        if (/(?<!F)\d/.test(e.key)) {
             camera = cameras[parseInt(e.key)];
             viewMatrix = getViewMatrix(camera);
         }
