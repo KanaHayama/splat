@@ -13,6 +13,8 @@ const sceneConstants = {
             [0.14304411164968456,0.09595640083739926,9.106166449065618],
             [0.8832003460727661,-1.1122912221126533,-5.444160882487328],
         ],
+        previous: null,
+        next: "ict_floor1_reception.splat",
     },
     "ict_floor1_reception.splat": {
         startingCamera: {
@@ -31,6 +33,8 @@ const sceneConstants = {
             [-0.4328837646225612,-0.7308875170991815,-8.353599297129634],
             [3.1676209825405723,-0.8123857699686061,-10.879931120959796],
         ],
+        previous: "ict_floor1_outdoor.splat",
+        next: "ict_floor2_lobby.splat",
     },
     "ict_floor2_lobby.splat": {
         startingCamera: {
@@ -46,6 +50,8 @@ const sceneConstants = {
             [-8.253115740957854,-0.07731361847598839,-9.686671897425938],
             [4.060725360838175,-0.11408282758721389,-9.411900460836574],
         ],
+        previous: "ict_floor1_reception.splat",
+        next: "ict_floor2_kitchen.splat",
     },
     "ict_floor2_kitchen.splat": {
         startingCamera: {
@@ -59,6 +65,8 @@ const sceneConstants = {
             [7.161335926695738,-0.8617145733486905,-7.497316196414256],
             [-7.433349440729849,-0.8074443912390934,-8.67287830860323],
         ],
+        previous: "ict_floor2_lobby.splat",
+        next: null,
     },
 };
 
@@ -179,7 +187,6 @@ function findProgress(path, point) {
 // #endregion Paths
 
 // #region Cameras
-const defaultCarousel = true;
 
 let cameras = [
     {
@@ -1026,15 +1033,20 @@ async function main() {
     let bufferLength, numSamples, downscale, splatData;
     let reader;
 
+    let sceneConstant;
     let path, pathProgress;
     let viewMatrix, startingViewMatrix, carousel;
     
-    let stopLoading;
+    let isLoading, stopLoading;
     let vertexCount;
     
     // #region Online Model
     let modelName;
-    async function openOnlineModelAsync(filename) {
+    async function openOnlineModelAsync(filename, initialProgress = 0, initialCarousel = true) {
+        if (isLoading) {
+            stopLoading = true;
+        }
+        isLoading = true;
         const url = new URL(
             filename,
             "https://huggingface.co/ZongjianLi/usc-ict-splat/resolve/main/",
@@ -1044,18 +1056,19 @@ async function main() {
             credentials: "omit", // include, *same-origin, omit
         });
         if (req.status != 200) {
+            isLoading = false;
             throw new Error(req.status + " Unable to load " + req.url);
         }
         modelName = filename;
-        pathProgress = 0;
-        const constatns = sceneConstants[modelName];
-        path = constatns.path;
-        startingCamera = constatns.startingCamera
+        pathProgress = initialProgress;
+        sceneConstant = sceneConstants[modelName];
+        path = sceneConstant.path;
+        startingCamera = sceneConstant.startingCamera
         startingCamera.position = lerpPath(path, pathProgress);
         camera = startingCamera;
         startingViewMatrix = getViewMatrix(startingCamera);
         viewMatrix = startingViewMatrix;
-        carousel = defaultCarousel;
+        carousel = initialCarousel;
         vertexCount = 0;
         bufferLength = parseInt(req.headers.get("content-length"));
         reader = req.body.getReader();
@@ -1094,6 +1107,7 @@ async function main() {
                 lastVertexCount = vertexCount;
             }
         }
+        isLoading = false;
     }
     // #endregion Online Model
     
@@ -1307,7 +1321,7 @@ async function main() {
 
     window.addEventListener(
         "wheel",
-        (e) => {
+        async (e) => {
             carousel = false;
             e.preventDefault();
             const lineHeight = 10;
@@ -1338,7 +1352,17 @@ async function main() {
                 viewMatrix = invert4(inv);
             } else {
                 let delta = e.deltaY * scale * 0.0002;
-                constrainCameraToProgress(delta);
+                const tolerance = 0.001;
+                if (Math.abs(pathProgress - 1) <= tolerance && delta > 0 && sceneConstant.next && !isLoading) {
+                    await openOnlineModelAsync(sceneConstant.next, 0, carousel);
+                    await loadOnlineModelAsync();
+                    
+                } else if (Math.abs(pathProgress - 0) <= tolerance && delta < 0 && sceneConstant.previous && !isLoading) {
+                    await openOnlineModelAsync(sceneConstant.previous, 1, carousel);
+                    await loadOnlineModelAsync();
+                } else {
+                    constrainCameraToProgress(delta);    
+                }
             }
         },
         { passive: false },
@@ -1760,14 +1784,14 @@ async function main() {
         selectFile(e.dataTransfer.files[0]);
     });
     // #endregion File Drop
-
+    
     // #region Minimap Navigation
     function createModelButtonHandler(targetModelName) {
         return async () => {
             if (targetModelName === modelName) {
                 return;
             }
-            await openOnlineModelAsync(targetModelName);
+            await openOnlineModelAsync(targetModelName, 0, true);
             await loadOnlineModelAsync();
         }
     }
