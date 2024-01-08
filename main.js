@@ -62,31 +62,33 @@ function lerpPath(path, a) {
 // #endregion Paths
 
 // #region Cameras
+const defaultCarousel = true;
+
 const startingCameras = {
     "ict_floor1_outdoor.splat":{
         rotation: [
-            [-0.9946665777874854,0,0.10314261501693792],[-0.006771195763650733,0.9978427863783643,-0.06529873337663164],[-0.10292011436284614,-0.0656488664994423,-0.9925208694968375]
+            [-0.9981561806540723,0.05323092228676953,0.02916689792539171],[0.053178931212923795,0.9985817285916766,-0.002555894736736776],[-0.029261583982087162,-0.0010001176701072167,-0.9995712878366444]
         ],
         fy: 1164.6601287484507,
         fx: 1159.5880733038064,
     },
     "ict_floor1_reception.splat": {
         rotation: [
-            [-0.9238402383033332,0,0.38277828320274476],[0.016242013412648675,0.9990993609592667,0.03920030524228991],[-0.38243353813695163,0.04243190934645058,-0.9230081917173267]
+            [-0.9187824618488287,-0.025336995893393555,0.3939502816829832],[0.01624201341264859,0.9946669304382446,0.10185231707170647],[-0.39442994916627333,0.09997866838316281,-0.9134710072405386]
         ],
         fy: 1164.6601287484507,
         fx: 1159.5880733038064,
     },
     "ict_floor2_lobby.splat":{
         rotation: [
-            [0.48640375620197107,0,-0.8737341620611005],[0.0472735395538371,0.9985352422731497,0.02631696024533013],[0.8724543531960212,-0.05410517478488145,0.4856912925417123]
+            [0.44000000000000045,0.06134507622095764,-0.891480107250543],[-0.010000000000000165,1.001455985986391,0.05904157968774151],[0.8999999999999985,-0.010781628182743929,0.44032233249487795]
         ],
         fy: 1164.6601287484507,
         fx: 1159.5880733038064,
     },
     "ict_floor2_kitchen.splat":{
         rotation: [
-            [-0.22742745207799256,0,-0.9737950267080401],[-0.015962269641640332,0.9998656451460055,0.0037279491211332345],[0.9736641926194785,0.016391816762099026,-0.22739689609589117]
+            [-0.1472178325952146,0.09070010437439764,-0.9849367496608255],[-0.0060108568407141105,0.9956863211432401,0.0925884414399042],[0.9890858301311327,0.01955098347152368,-0.14603759680059838]
         ],
         fy: 1164.6601287484507,
         fx: 1159.5880733038064,
@@ -309,35 +311,6 @@ function getCamera(viewMatrix) {
 function normalize(v) {
     const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     return length > 0 ? [v[0] / length, v[1] / length, v[2] / length] : [0, 0, 0];
-}
-
-function removeZRotation(camera) {
-    function crossProduct(a, b) {
-        return [
-            a[1] * b[2] - a[2] * b[1],
-            a[2] * b[0] - a[0] * b[2],
-            a[0] * b[1] - a[1] * b[0],
-        ];
-    }
-
-    const zAxis = [camera.rotation[2][0], camera.rotation[2][1], camera.rotation[2][2]];
-
-    let xAxis = crossProduct([0, 1, 0], zAxis);
-    xAxis = normalize(xAxis);
-
-    let yAxis = crossProduct(zAxis, xAxis);
-    yAxis = normalize(yAxis);
-
-    let newRotation = [
-        xAxis,
-        yAxis,
-        zAxis,
-    ];
-    let result = {  
-        ...camera,
-        rotation: newRotation,
-    };
-    return result;
 }
 
 function multiply4(a, b) {
@@ -995,7 +968,7 @@ async function main() {
         camera = startingCamera;
         startingViewMatrix = getViewMatrix(startingCamera);
         viewMatrix = startingViewMatrix;
-        carousel = true;
+        carousel = defaultCarousel;
         vertexCount = 0;
         bufferLength = parseInt(req.headers.get("content-length"));
         reader = req.body.getReader();
@@ -1233,8 +1206,6 @@ async function main() {
                 let camera = getCamera(viewMatrix);
                 console.log("Position: " + JSON.stringify(camera.position));
                 console.log("Rotation: " + JSON.stringify(camera.rotation));
-                camera = removeZRotation(camera);
-                console.log("XY Rotation: " + JSON.stringify(camera.rotation));
         } else if (e.code === "KeyP") {
             carousel = true;
         }
@@ -1478,10 +1449,7 @@ async function main() {
             inv = rotate4(inv, -0.01, 0, 0, 1);
         }
         if (activeKeys.includes("KeyX")) {
-            let matrix = invert4(viewMatrix);
-            let camera = getCamera(matrix);
-            camera = removeZRotation(camera);
-            inv = getViewMatrix(camera);
+            ;
         }
         if (activeKeys.includes("ArrowLeft")) {
             inv = rotate4_walk(inv, -0.01, 0, 1, 0);
