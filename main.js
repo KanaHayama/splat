@@ -66,12 +66,11 @@ const sceneConstants = {
 
 // #region Paths
 
+function distance(a, b) {
+    return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
+}
+
 function lerpPath(path, a) {
-
-    function distance(a, b) {
-        return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
-    }
-
     let totalDistance = 0;
     let distances = [];
     for (let i = 1; i < path.length; i++) {
@@ -98,6 +97,84 @@ function lerpPath(path, a) {
         start[2] + sectionA * (end[2] - start[2]),
     ];
     return result;
+}
+
+function closestPointOnLine(a, b, p) {
+    let ap = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+    let ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    let ab2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+    let ap_ab = ap[0] * ab[0] + ap[1] * ab[1] + ap[2] * ab[2];
+    let t = ap_ab / ab2;
+    if (t < 0) {
+        t = 0;
+    } else if (t > 1) {
+        t = 1;
+    }
+    let result = [
+        a[0] + ab[0] * t,
+        a[1] + ab[1] * t,
+        a[2] + ab[2] * t,
+    ];
+    return result;
+}
+
+function isPointOnLineSegment(a, b, closestPointOnLine, tolerance = 0.1) {
+    const distanceAToClosest = distance(a, closestPointOnLine);
+    const distanceBToClosest = distance(b, closestPointOnLine);
+    const distanceAB = distance(a, b);
+
+    return Math.abs(distanceAToClosest + distanceBToClosest - distanceAB) <= tolerance;
+}
+
+function findProgress(path, point) {
+    let totalDistance = 0;
+    let distances = [];
+    for (let i = 1; i < path.length; i++) {
+        let dist = distance(path[i-1], path[i]);
+        totalDistance += dist;
+        distances.push(dist);
+    }
+
+    let minDistance = Infinity;
+    let closestPoint = null;
+    let closestSectionIndex = null;
+
+    for (let i = 0; i < path.length - 1; i++) {
+        let segmentStart = path[i];
+        let segmentEnd = path[i + 1];
+
+        // Find the closest point on the current segment to the given point
+        let currentClosest = closestPointOnLine(segmentStart, segmentEnd, point);
+
+        // Check if this closest point is actually on the line segment
+        if (isPointOnLineSegment(segmentStart, segmentEnd, currentClosest)) {
+            // Calculate the distance from the given point to the current closest point
+            let currentDistance = distance(point, currentClosest);
+
+            // If this distance is the smallest so far, update the closest point and minimum distance
+            if (currentDistance < minDistance) {
+                minDistance = currentDistance;
+                closestPoint = currentClosest;
+                closestSectionIndex = i;
+            }
+        }
+    }
+    if (distance(point, path[path.length - 1]) < minDistance) {
+        closestPoint = path[path.length - 1];
+        closestSectionIndex = path.length - 1;
+    }
+    if (distance(point, path[0]) < minDistance) {
+        closestPoint = path[0];
+        closestSectionIndex = 0;
+    }
+
+    let accDistance = 0;
+    for (let i = 0; i < closestSectionIndex; i++) {
+        accDistance += distances[i];
+    }
+    accDistance += distance(path[closestSectionIndex], closestPoint);
+    let progress = accDistance / totalDistance;
+    return progress;
 }
 // #endregion Paths
 
@@ -1028,12 +1105,13 @@ async function main() {
         if (!path) {
             return;
         }
+        const camera = getCamera(viewMatrix);
+        pathProgress = findProgress(path, camera.position);
         if (delta) {
             pathProgress += delta;
             pathProgress = Math.max(0, Math.min(1, pathProgress));
         }
         const newPosition = lerpPath(path, pathProgress);
-        const camera = getCamera(viewMatrix);
         camera.position = newPosition;
         viewMatrix = getViewMatrix(camera);
     }
