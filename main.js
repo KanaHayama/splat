@@ -1143,6 +1143,26 @@ async function main() {
     }
     // #region Camera
 
+    // #region Navigation Elements
+    function createModelButtonHandler(targetModelName) {
+        return async () => {
+            if (targetModelName === modelName) {
+                return;
+            }
+            await openOnlineModelAsync(targetModelName, 0, true);
+            await loadOnlineModelAsync();
+        }
+    }
+    const outdoorButton = document.getElementById("outdoor-button");
+    const receptionButton = document.getElementById("reception-button");
+    const lobbyButton = document.getElementById("lobby-button");
+    const kitchenButton = document.getElementById("kitchen-button");
+    outdoorButton.addEventListener("click", createModelButtonHandler("ict_floor1_outdoor.splat"));
+    receptionButton.addEventListener("click", createModelButtonHandler("ict_floor1_reception.splat"));
+    lobbyButton.addEventListener("click", createModelButtonHandler("ict_floor2_lobby.splat"));
+    kitchenButton.addEventListener("click", createModelButtonHandler("ict_floor2_kitchen.splat"));
+    // #endregion Navigation Elements
+
     try {
         viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
         carousel = false;
@@ -1795,26 +1815,6 @@ async function main() {
         selectFile(e.dataTransfer.files[0]);
     });
     // #endregion File Drop
-    
-    // #region Minimap Navigation
-    function createModelButtonHandler(targetModelName) {
-        return async () => {
-            if (targetModelName === modelName) {
-                return;
-            }
-            await openOnlineModelAsync(targetModelName, 0, true);
-            await loadOnlineModelAsync();
-        }
-    }
-    const outdoorButton = document.getElementById("outdoor-button");
-    const receptionButton = document.getElementById("reception-button");
-    const lobbyButton = document.getElementById("lobby-button");
-    const kitchenButton = document.getElementById("kitchen-button");
-    outdoorButton.addEventListener("click", createModelButtonHandler("ict_floor1_outdoor.splat"));
-    receptionButton.addEventListener("click", createModelButtonHandler("ict_floor1_reception.splat"));
-    lobbyButton.addEventListener("click", createModelButtonHandler("ict_floor2_lobby.splat"));
-    kitchenButton.addEventListener("click", createModelButtonHandler("ict_floor2_kitchen.splat"));
-    // #endregion Minimap Navigation
 
     await loadOnlineModelAsync();
 }
