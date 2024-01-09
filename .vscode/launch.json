@@ -10,10 +10,10 @@
             "request": "launch",
             "name": "Launch index.html",
             "file": "${workspaceFolder}/index.html",
-            // "runtimeArgs": [
-            //     "--allow-file-access-from-files"
-            // ],
-            // "webRoot": "${workspaceRoot}"
+            "runtimeArgs": [
+                // "--disable-web-security",//Allow access to file:// URLs
+            ],
+            "webRoot": "${workspaceRoot}"
         }
     ]
 }

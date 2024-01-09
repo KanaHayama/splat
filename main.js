@@ -1,6 +1,7 @@
 // #region Scene Constants
 
 const sceneConstants = {
+    //NOTE: Press V to print current camera position and rotation to console
     "ict_floor1_outdoor.splat": {
         startingCamera: {
             rotation: [
@@ -1058,11 +1059,12 @@ async function main() {
             stopLoading = true;
         }
         isLoading = true;
-        const url = new URL(
+        let url = "data/" + filename;//Local file. must use --disable-web-security for Chrome
+        url = new URL(
             filename,
             "https://huggingface.co/ZongjianLi/usc-ict-splat/resolve/main/",
-            );
-            const req = await fetch(url, {
+        );//Online file. Comment this line if you want to use local file
+        const req = await fetch(url, {
             mode: "cors", // no-cors, *cors, same-origin
             credentials: "omit", // include, *same-origin, omit
         });
@@ -1081,7 +1083,12 @@ async function main() {
         viewMatrix = startingViewMatrix;
         carousel = initialCarousel;
         vertexCount = 0;
-        bufferLength = parseInt(req.headers.get("content-length"));
+        async function getFileLength(url) {//Only for local file
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return arrayBuffer.byteLength;
+        }
+        bufferLength = parseInt(req.headers.get("content-length")) || await getFileLength(url);
         reader = req.body.getReader();
         numSamples = length / bytesPerSample;
         downscale =  numSamples > 500000 ?
@@ -1376,9 +1383,9 @@ async function main() {
                 JSON.stringify(
                     viewMatrix.map((k) => Math.round(k * 100) / 100),
                 );
-                let camera = getCamera(viewMatrix);
-                console.log("Rotation: " + JSON.stringify(camera.rotation));
-                console.log("Position: " + JSON.stringify(camera.position));
+            let camera = getCamera(viewMatrix);
+            console.log("Rotation: " + JSON.stringify(camera.rotation));
+            console.log("Position: " + JSON.stringify(camera.position));
         } else if (e.code === "KeyP") {
             carousel = true;
         }
