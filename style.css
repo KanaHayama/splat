@@ -200,8 +200,15 @@ body.nohf .cube-face {
     margin: 0 10px;
 }
 
-.keyboard-layout-right {
+.keyboard-layout-2 {
     margin-left: 70px; /* Set a larger left margin for the second group of buttons */
+}
+
+.keyboard-layout-3 {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-left: 20px;
 }
 
 .key-row {
@@ -224,4 +231,9 @@ body.nohf .cube-face {
 
 .key-offset-3 {
     left: 50px; /* Left offset for the third row of keys */
+}
+
+.key-plus {
+    height: 100px; /* 两倍高度 */
+    line-height: 100px; /* 调整行高以垂直居中文本 */
 }

@@ -47,7 +47,6 @@ const sceneConstants = {
             fx: 1159.5880733038064,
         },
         path: [
-            [5.11339185119186,-0.06601808880653204,-16.967252243106234],
             [4.909870018255899,-0.014131692091076786,-16.268180727447877],
             [-7.708995366048629,0.0656334346260411,-15.653176868216095],
             [-8.253115740957854,-0.07731361847598839,-9.686671897425938],
@@ -1141,6 +1140,20 @@ async function main() {
         camera.position = newPosition;
         viewMatrix = getViewMatrix(camera);
     }
+
+    async function changeProgressAsync(delta) {
+        delta *= sceneConstant.wheelScale;
+        const tolerance = 0.001;
+        if (Math.abs(pathProgress - 1) <= tolerance && delta > 0 && sceneConstant.next && !isLoading) {
+            await openOnlineModelAsync(sceneConstant.next, 0, carousel);
+            await loadOnlineModelAsync();
+        } else if (Math.abs(pathProgress - 0) <= tolerance && delta < 0 && sceneConstant.previous && !isLoading) {
+            await openOnlineModelAsync(sceneConstant.previous, 1, carousel);
+            await loadOnlineModelAsync();
+        } else {
+            constrainCameraToProgress(delta);    
+        }
+    }
     // #region Camera
     
     // #region Navigation Elements
@@ -1338,17 +1351,18 @@ async function main() {
 
     const buttonSimulatedKeys = document.querySelectorAll('.key');
     buttonSimulatedKeys.forEach(button => {
-        const keyName = "S-" + button.getAttribute('data-key');
+        const keyName = button.getAttribute('data-key');
+        const simulatedKeyName = "S-" + keyName;
         button.addEventListener('mousedown', () => {
             carousel = false;
-            activeKeys.push(keyName);
+            activeKeys.push(simulatedKeyName);
         });
         window.addEventListener('mouseup', () => {
-            activeKeys = activeKeys.filter((k) => k !== keyName);
+            activeKeys = activeKeys.filter((k) => k !== simulatedKeyName);
         });
     });
 
-    window.addEventListener("keydown", (e) => {
+    window.addEventListener("keydown", async (e) => {
         // if (document.activeElement != document.body) return;
         carousel = false;
         if (!activeKeys.includes(e.code)) activeKeys.push(e.code);
@@ -1408,17 +1422,8 @@ async function main() {
                 );
                 viewMatrix = invert4(inv);
             } else {
-                let delta = e.deltaY * scale * sceneConstant.wheelScale;
-                const tolerance = 0.001;
-                if (Math.abs(pathProgress - 1) <= tolerance && delta > 0 && sceneConstant.next && !isLoading) {
-                    await openOnlineModelAsync(sceneConstant.next, 0, carousel);
-                    await loadOnlineModelAsync();
-                } else if (Math.abs(pathProgress - 0) <= tolerance && delta < 0 && sceneConstant.previous && !isLoading) {
-                    await openOnlineModelAsync(sceneConstant.previous, 1, carousel);
-                    await loadOnlineModelAsync();
-                } else {
-                    constrainCameraToProgress(delta);    
-                }
+                const delta = e.deltaY * scale;
+                await changeProgressAsync(delta);
             }
         },
         { passive: false },
@@ -1631,7 +1636,14 @@ async function main() {
         if (activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
             inv = rotate4(inv, -0.005, 1, 0, 0);
         }
-
+        if (activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
+            changeProgressAsync(50);//do not need await
+            inv = invert4(viewMatrix);
+        }
+        if (activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
+            changeProgressAsync(-50);//do not need await
+            inv = invert4(viewMatrix);
+        }
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         let isJumping = activeKeys.includes("Space");
         for (let gamepad of gamepads) {
