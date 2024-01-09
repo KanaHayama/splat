@@ -16,28 +16,34 @@
 
         <div id="info" class="mt-2 ms-1">
             <h3 class="nohf">kandao × USC</h3>
-            <div class="btn-group" role="group" aria-label="Model buttons">
-                <button id="outdoor-button" type="button" class="btn btn-secondary">Outdoor</button>
-                <button id="reception-button" type="button" class="btn btn-secondary">Reception</button>
-                <button id="lobby-button" type="button" class="btn btn-secondary">Lobby</button>
-                <button id="kitchen-button" type="button" class="btn btn-secondary">Kitchen</button>
-            </div>
 
-            <div id="instructions">Movement (WASD)
+			<div class="btn-group-vertical" role="group">
+				<div class="btn-group" role="group" aria-label="Model buttons">
+					<button id="outdoor-button" type="button" class="btn btn-secondary">Outdoor</button>
+					<button id="reception-button" type="button" class="btn btn-secondary">Reception</button>
+					<button id="lobby-button" type="button" class="btn btn-secondary">Lobby</button>
+					<button id="kitchen-button" type="button" class="btn btn-secondary">Kitchen</button>
+				</div>
 
+				<button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#instructions" aria-expanded="false" aria-controls="instructions">
+					Show / Hide Instructions
+				</button>
+			</div>
+
+			<div class="collapse" id="instructions">
+				<div class="card card-body" style="background: rgba(0, 0, 0, 0.6); white-space: pre-wrap; padding: 10px; border-radius: 10px; font-size: x-small;">Movement (WASD)
 W/A/S/D to move
 E to ascend
 Q to descend
 
 Camera Angle (Arrow Keys or Mouse)
-
 Arrow Keys / Mouse Left Button Drag to orbit the camera
 Z to rotate counterclockwise
 C to rotate clockwise
 
 Virtual Tour
-
 Numpad +- / Mouse Scroll Wheel to control tour progress</div>
+			</div>
 
         </div>
 

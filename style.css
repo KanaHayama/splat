@@ -158,14 +158,6 @@ details {
 	touch-action: none;
 }
 
-#instructions {
-	background: rgba(0, 0, 0, 0.6);
-	white-space: pre-wrap;
-	padding: 10px;
-	border-radius: 10px;
-	font-size: x-small;
-}
-
 body.nohf .nohf {
 	display: none;
 }
