@@ -1336,6 +1336,18 @@ async function main() {
     // #region Basic Inputs
     let activeKeys = [];
 
+    const buttonSimulatedKeys = document.querySelectorAll('.key');
+    buttonSimulatedKeys.forEach(button => {
+        const keyName = "S-" + button.getAttribute('data-key');
+        button.addEventListener('mousedown', () => {
+            carousel = false;
+            activeKeys.push(keyName);
+        });
+        window.addEventListener('mouseup', () => {
+            activeKeys = activeKeys.filter((k) => k !== keyName);
+        });
+    });
+
     window.addEventListener("keydown", (e) => {
         // if (document.activeElement != document.body) return;
         carousel = false;
@@ -1580,43 +1592,43 @@ async function main() {
         let inv = invert4(viewMatrix);
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
-        if (activeKeys.includes("KeyW")) {
+        if (activeKeys.includes("KeyW") || activeKeys.includes("S-KeyW")) {
             inv = translate4_walk(inv, 0, 0, 0.1);
         }
-        if (activeKeys.includes("KeyS")) {
+        if (activeKeys.includes("KeyS") || activeKeys.includes("S-KeyS")) {
             inv = translate4_walk(inv, 0, 0, -0.1);
         }
-        if (activeKeys.includes("KeyA")) {
+        if (activeKeys.includes("KeyA") || activeKeys.includes("S-KeyA")) {
             inv = translate4_walk(inv, -0.05, 0, 0);
         }
-        if (activeKeys.includes("KeyD")) {
+        if (activeKeys.includes("KeyD") || activeKeys.includes("S-KeyD")) {
             inv = translate4_walk(inv, 0.05, 0, 0);
         }
-        if (activeKeys.includes("KeyQ")) {
+        if (activeKeys.includes("KeyQ") || activeKeys.includes("S-KeyQ")) {
             inv = translate4(inv, 0, 0.05, 0);
         }
-        if (activeKeys.includes("KeyE")) {
+        if (activeKeys.includes("KeyE") || activeKeys.includes("S-KeyE")) {
             inv = translate4(inv, 0, -0.05, 0);
         }
-        if (activeKeys.includes("KeyC")) {
+        if (activeKeys.includes("KeyC") || activeKeys.includes("S-KeyC")) {
             inv = rotate4(inv, 0.01, 0, 0, 1);
         }
-        if (activeKeys.includes("KeyZ")) {
+        if (activeKeys.includes("KeyZ") || activeKeys.includes("S-KeyZ")) {
             inv = rotate4(inv, -0.01, 0, 0, 1);
         }
-        if (activeKeys.includes("KeyX")) {
+        if (activeKeys.includes("KeyX") || activeKeys.includes("S-KeyX")) {
             ;
         }
-        if (activeKeys.includes("ArrowLeft")) {
+        if (activeKeys.includes("ArrowLeft") || activeKeys.includes("S-ArrowLeft")) {
             inv = rotate4_walk(inv, -0.01, 0, 1, 0);
         }
-        if (activeKeys.includes("ArrowRight")) {
+        if (activeKeys.includes("ArrowRight") || activeKeys.includes("S-ArrowRight")) {
             inv = rotate4_walk(inv, 0.01, 0, 1, 0);
         }
-        if (activeKeys.includes("ArrowUp")) {
+        if (activeKeys.includes("ArrowUp") || activeKeys.includes("S-ArrowUp")) {
             inv = rotate4(inv, 0.005, 1, 0, 0);
         }
-        if (activeKeys.includes("ArrowDown")) {
+        if (activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
             inv = rotate4(inv, -0.005, 1, 0, 0);
         }
 
@@ -1760,6 +1772,21 @@ async function main() {
         for (let updater of buttonStyleUpdaters) {
             updater();
         }
+        buttonSimulatedKeys.forEach(button => {
+            const keyName = button.getAttribute('data-key');
+            const simulatedKeyName = "S-" + keyName;
+            if (activeKeys.includes(keyName)) {
+                button.classList.toggle("active", true);
+                button.blur();
+            } else {
+                if (activeKeys.includes(simulatedKeyName)) {
+                    //do nothing
+                } else {
+                    button.classList.toggle("active", false);
+                    button.blur();
+                }
+            }
+        });
 
         lastFrame = now;
         requestAnimationFrame(frame);
