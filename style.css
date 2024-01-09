@@ -184,3 +184,44 @@ body.nohf .cube-face {
 .model-buttons button {
 	margin-bottom: 10px; /* Space between each button */
 }
+
+.keyboard-layout-container {
+    z-index: 100;
+    position: absolute; 
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+}
+
+.keyboard-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 0 10px;
+}
+
+.keyboard-layout-right {
+    margin-left: 70px; /* Set a larger left margin for the second group of buttons */
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+}
+
+.key {
+    width: 50px; /* Square width */
+    height: 50px; /* Square height */
+    margin: 5px 2.5px;
+    line-height: 50px; /* Center text vertically */
+    cursor: pointer;
+    position: relative;
+}
+
+.key-offset-2 { 
+    left: 25px; /* Left offset for the second row of keys */
+}
+
+.key-offset-3 {
+    left: 50px; /* Left offset for the third row of keys */
+}
