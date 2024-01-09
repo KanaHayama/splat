@@ -1142,7 +1142,7 @@ async function main() {
         viewMatrix = getViewMatrix(camera);
     }
     // #region Camera
-
+    
     // #region Navigation Elements
     function createModelButtonHandler(targetModelName) {
         return async () => {
@@ -1153,6 +1153,13 @@ async function main() {
             await loadOnlineModelAsync();
         }
     }
+    function createButtonStyleUpdater(button, targetModelName) {
+        return () => {
+            const isActive = targetModelName === modelName;
+            button.classList.toggle("btn-primary", isActive);
+            button.classList.toggle("btn-secondary", !isActive);
+        }
+    }
     const outdoorButton = document.getElementById("outdoor-button");
     const receptionButton = document.getElementById("reception-button");
     const lobbyButton = document.getElementById("lobby-button");
@@ -1161,6 +1168,12 @@ async function main() {
     receptionButton.addEventListener("click", createModelButtonHandler("ict_floor1_reception.splat"));
     lobbyButton.addEventListener("click", createModelButtonHandler("ict_floor2_lobby.splat"));
     kitchenButton.addEventListener("click", createModelButtonHandler("ict_floor2_kitchen.splat"));
+    const buttonStyleUpdaters = [
+        createButtonStyleUpdater(outdoorButton, "ict_floor1_outdoor.splat"),
+        createButtonStyleUpdater(receptionButton, "ict_floor1_reception.splat"),
+        createButtonStyleUpdater(lobbyButton, "ict_floor2_lobby.splat"),
+        createButtonStyleUpdater(kitchenButton, "ict_floor2_kitchen.splat"),
+    ];
     // #endregion Navigation Elements
 
     try {
@@ -1744,6 +1757,10 @@ async function main() {
             document.getElementById("progress").style.display = "none";
         }
         fps.innerText = Math.round(avgFps) + " fps";
+        for (let updater of buttonStyleUpdaters) {
+            updater();
+        }
+
         lastFrame = now;
         requestAnimationFrame(frame);
     };
