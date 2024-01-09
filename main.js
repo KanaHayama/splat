@@ -1637,10 +1637,12 @@ async function main() {
             inv = rotate4(inv, -0.005, 1, 0, 0);
         }
         if (activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
+            viewMatrix = invert4(inv);
             changeProgressAsync(50);//do not need await
             inv = invert4(viewMatrix);
         }
         if (activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
+            viewMatrix = invert4(inv);
             changeProgressAsync(-50);//do not need await
             inv = invert4(viewMatrix);
         }
