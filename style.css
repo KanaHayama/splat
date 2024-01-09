@@ -226,6 +226,6 @@ body.nohf .cube-face {
 }
 
 .key-plus {
-    height: 100px; /* 两倍高度 */
-    line-height: 100px; /* 调整行高以垂直居中文本 */
+    height: 100px; /* Double height */
+    line-height: 100px; /* Adjust line height to vertically center text */
 }
