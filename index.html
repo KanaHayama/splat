@@ -18,16 +18,22 @@
             <h3 class="nohf">kandao × USC</h3>
 
 			<div class="btn-group-vertical" role="group">
-				<div class="btn-group" role="group" aria-label="Model buttons">
+				<div class="btn-group" role="group" aria-label="Scenes">
 					<button id="outdoor-button" type="button" class="btn btn-secondary">Outdoor</button>
 					<button id="reception-button" type="button" class="btn btn-secondary">Reception</button>
 					<button id="lobby-button" type="button" class="btn btn-secondary">Lobby</button>
 					<button id="kitchen-button" type="button" class="btn btn-secondary">Kitchen</button>
 				</div>
 
-				<button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#instructions" aria-expanded="false" aria-controls="instructions">
-					Show / Hide Instructions
-				</button>
+
+				<div class="btn-group" role="group" aria-label="Navigation Controls">
+					<button class="btn btn-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#instructions" aria-expanded="false" aria-controls="instructions">
+						Instructions
+					</button>
+					<button class="btn btn-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#keyboard-layout-container" aria-expanded="true" aria-controls="keyboard-layout-container">
+						Navigation
+					</button>
+				</div>
 			</div>
 
 			<div class="collapse" id="instructions">
@@ -47,7 +53,7 @@ Numpad +- / Mouse Scroll Wheel to control tour progress</div>
 
         </div>
 
-		<div class="keyboard-layout-container">
+		<div class="keyboard-layout-container collapse show" id="keyboard-layout-container">
 			<div class="keyboard-layout">
 				<div class="key-row">
 					<button class="key btn btn-dark" data-key="KeyQ" tabindex="-1">Q</button>
