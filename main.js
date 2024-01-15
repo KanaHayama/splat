@@ -1050,11 +1050,12 @@ async function main() {
     let viewMatrix, startingViewMatrix, carousel;
     
     let isLoading, stopLoading;
+    let bytesRead;
     let vertexCount;
     
     // #region Online Model
     let modelName;
-    async function openOnlineModelAsync(filename, initialProgress = 0, initialCarousel = true) {
+    async function openOnlineModelAsync(filename, initialProgress = 0, initialCarousel = true, append = false) {
         if (isLoading) {
             stopLoading = true;
         }
@@ -1082,7 +1083,6 @@ async function main() {
         startingViewMatrix = getViewMatrix(startingCamera);
         viewMatrix = startingViewMatrix;
         carousel = initialCarousel;
-        vertexCount = 0;
         async function getFileLength(url) {//Only for local file
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
@@ -1091,16 +1091,24 @@ async function main() {
         bufferLength = parseInt(req.headers.get("content-length")) || await getFileLength(url);
         reader = req.body.getReader();
         numSamples = length / bytesPerSample;
+        if (!append || !splatData) {
+            splatData = new Uint8Array(bufferLength);
+            vertexCount = 0;
+            bytesRead = 0;
+        } else {
+            numSamples += vertexCount;
+            let newSplatData = new Uint8Array(splatData.length + bufferLength);
+            newSplatData.set(splatData);
+            splatData = newSplatData;
+        }
         downscale =  numSamples > 500000 ?
             1 : 1 / devicePixelRatio;
-        splatData = new Uint8Array(bufferLength);
         console.log(numSamples, downscale);
     }
 
     async function loadOnlineModelAsync() {
-        let bytesRead = 0;
-        let lastVertexCount = -1;
         stopLoading = false;
+        let cachedVertexCount = vertexCount;
         while (true) {
             const { done, value } = await reader.read();
             if (stopLoading) {
@@ -1117,12 +1125,12 @@ async function main() {
             splatData.set(value, bytesRead);
             bytesRead += value.length;
     
-            if (vertexCount > lastVertexCount) {
+            if (vertexCount > cachedVertexCount) {
                 worker.postMessage({
                     buffer: splatData.buffer,
                     vertexCount: Math.floor(bytesRead / bytesPerSample),
                 });
-                lastVertexCount = vertexCount;
+                cachedVertexCount = vertexCount;
             }
         }
         isLoading = false;
