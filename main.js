@@ -938,7 +938,15 @@ function createWorker(self) {
         if (e.data.ply) {
             vertexCount = 0;
             runSort(viewProj);
-            buffer = processPlyBuffer(e.data.ply);
+            let localBuffer = processPlyBuffer(e.data.ply);
+            if (e.data.append) {
+                const newBuffer = new Uint8Array(buffer.byteLength + localBuffer.byteLength);
+                newBuffer.set(new Uint8Array(buffer));
+                newBuffer.set(new Uint8Array(localBuffer), buffer.byteLength);
+                buffer = newBuffer.buffer;
+            } else {
+                buffer = localBuffer;
+            }
             vertexCount = Math.floor(buffer.byteLength / rowLength);
             postMessage({ buffer: buffer });
         } else if (e.data.buffer) {
@@ -1836,7 +1844,7 @@ async function main() {
         e.preventDefault();
         e.stopPropagation();
     };
-    const selectFile = (file) => {
+    const selectFile = (file, append) => {
         const fr = new FileReader();
         if (/\.json$/i.test(file.name)) {
             fr.onload = () => {
@@ -1856,20 +1864,30 @@ async function main() {
         } else {
             stopLoading = true;
             fr.onload = () => {
-                splatData = new Uint8Array(fr.result);
-                bufferLength = splatData.byteLength;
-                numSamples = bufferLength / bytesPerSample;
-                console.log("Loaded", Math.floor(numSamples));
+                const localSplatData = new Uint8Array(fr.result);
+                const localBufferLength = localSplatData.byteLength;
 
                 if (
-                    splatData[0] == 112 &&
-                    splatData[1] == 108 &&
-                    splatData[2] == 121 &&
-                    splatData[3] == 10
+                    localSplatData[0] == 112 &&
+                    localSplatData[1] == 108 &&
+                    localSplatData[2] == 121 &&
+                    localSplatData[3] == 10
                 ) {
                     // ply file magic header means it should be handled differently
-                    worker.postMessage({ ply: splatData.buffer });
+                    worker.postMessage({ ply: localSplatData.buffer, append: append, });
                 } else {
+                    if (append) {
+                        const newSplatData = new Uint8Array(splatData.length + localBufferLength);
+                        newSplatData.set(splatData);
+                        newSplatData.set(localSplatData, splatData.length);
+                        splatData = newSplatData;
+                        bufferLength = splatData.byteLength;
+                    } else {
+                        splatData = localSplatData;
+                        bufferLength = localBufferLength;
+                    }
+                    numSamples = bufferLength / bytesPerSample;
+
                     worker.postMessage({
                         buffer: splatData.buffer,
                         vertexCount: Math.floor(numSamples),
@@ -1885,7 +1903,8 @@ async function main() {
     document.addEventListener("drop", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        selectFile(e.dataTransfer.files[0]);
+        const append = e.shiftKey || e.ctrlKey || e.metaKey;
+        selectFile(e.dataTransfer.files[0], append);
     });
     // #endregion File Drop
 
