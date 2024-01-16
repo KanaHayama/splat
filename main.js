@@ -17,6 +17,9 @@ const sceneConstants = {
         previous: null,
         next: "ict_floor1_reception.splat",
         wheelScale: 0.0002,
+        appendings: [
+            "aixvr2024.splat",
+        ]
     },
     "ict_floor1_reception.splat": {
         startingCamera: {
