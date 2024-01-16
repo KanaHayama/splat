@@ -60,7 +60,7 @@ const sceneConstants = {
         ],
         previous: "ict_floor1_reception.splat",
         next: "ict_floor2_kitchen.splat",
-        wheelScale: 0.0001,
+        wheelScale: 0.00004,
     },
     "ict_floor2_kitchen.splat": {
         startingCamera: {
@@ -1380,13 +1380,21 @@ async function main() {
     buttonSimulatedKeys.forEach(button => {
         const keyName = button.getAttribute('data-key');
         const simulatedKeyName = "S-" + keyName;
+        const handleEnd = () => {
+            activeKeys = activeKeys.filter((k) => k !== simulatedKeyName);
+        };
+    
         button.addEventListener('mousedown', () => {
             carousel = false;
             activeKeys.push(simulatedKeyName);
         });
-        window.addEventListener('mouseup', () => {
-            activeKeys = activeKeys.filter((k) => k !== simulatedKeyName);
-        });
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();//prevent context menu
+            carousel = false;
+            activeKeys.push(simulatedKeyName);
+        }, { passive: false });
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', handleEnd, { passive: true });
     });
 
     window.addEventListener("keydown", async (e) => {
