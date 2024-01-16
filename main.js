@@ -940,8 +940,10 @@ function createWorker(self) {
     let sortRunning;
     self.onmessage = (e) => {
         if (e.data.ply) {
-            vertexCount = 0;
-            runSort(viewProj);
+            if (!e.data.append) {//Disable spinner showing up when appending
+                vertexCount = 0;//vertexCount equals 0 is the condition for showing spinner
+                runSort(viewProj);//A message will be posted
+            }
             let localBuffer = processPlyBuffer(e.data.ply);
             if (e.data.append) {
                 const newBuffer = new Uint8Array(buffer.byteLength + localBuffer.byteLength);
@@ -1111,6 +1113,7 @@ async function main() {
             numSamples += vertexCount;
             let newSplatData = new Uint8Array(splatData.length + bufferLength);
             newSplatData.set(splatData);
+            bytesRead = splatData.length;
             splatData = newSplatData;
         }
         downscale =  numSamples > 500000 ?
