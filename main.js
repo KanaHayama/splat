@@ -1170,7 +1170,7 @@ async function main() {
     // #endregion Online Model
     
     const params = new URLSearchParams(location.search);
-    await openOnlineModelAsync(params.get("url") || /*"ict_floor1_outdoor.splat"*/ "ict_floor2_lobby.splat");
+    await openOnlineModelAsync(params.get("url") || "ict_floor1_outdoor.splat");
 
     // #region Camera
     function constrainCameraToProgress(delta, recalculateProgress) {
