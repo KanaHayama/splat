@@ -61,6 +61,14 @@ const sceneConstants = {
         previous: "ict_floor1_reception.splat",
         next: "ict_floor2_kitchen.splat",
         wheelScale: 0.00004,
+        appendings: [
+            "0A68821@T1.splat",
+            "B2B4F20@T2.splat",
+            "B7AA04E@T3.splat",
+            "C1418C8@T4.splat",
+            "CFA55E4@T5.splat",
+            "E2FB61F@T6.splat",
+        ]
     },
     "ict_floor2_kitchen.splat": {
         startingCamera: {
@@ -1066,6 +1074,7 @@ async function main() {
     let isLoading, stopLoading;
     let bytesRead;
     let vertexCount;
+    let pendingModels;
     
     // #region Online Model
     let modelName;
@@ -1087,16 +1096,19 @@ async function main() {
             isLoading = false;
             throw new Error(req.status + " Unable to load " + req.url);
         }
-        modelName = filename;
-        pathProgress = initialProgress;
-        sceneConstant = sceneConstants[modelName];
-        path = sceneConstant.path;
-        startingCamera = sceneConstant.startingCamera
-        startingCamera.position = lerpPath(path, pathProgress);
-        camera = startingCamera;
-        startingViewMatrix = getViewMatrix(startingCamera);
-        viewMatrix = startingViewMatrix;
-        carousel = initialCarousel;
+        if (!append) {
+            modelName = filename;
+            pathProgress = initialProgress;
+            sceneConstant = sceneConstants[modelName];
+            path = sceneConstant.path;
+            startingCamera = sceneConstant.startingCamera
+            startingCamera.position = lerpPath(path, pathProgress);
+            camera = startingCamera;
+            startingViewMatrix = getViewMatrix(startingCamera);
+            viewMatrix = startingViewMatrix;
+            carousel = initialCarousel;
+            pendingModels = [...(sceneConstant.appendings ?? [])];
+        }
         async function getFileLength(url) {//Only for local file
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
@@ -1149,6 +1161,11 @@ async function main() {
             }
         }
         isLoading = false;
+
+        if (pendingModels.length > 0) {
+            await openOnlineModelAsync(pendingModels.shift(), 0, carousel, true);
+            await loadOnlineModelAsync();
+        }
     }
     // #endregion Online Model
     
