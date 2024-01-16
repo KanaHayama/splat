@@ -1156,12 +1156,14 @@ async function main() {
     await openOnlineModelAsync(params.get("url") || /*"ict_floor1_outdoor.splat"*/ "ict_floor2_lobby.splat");
 
     // #region Camera
-    function constrainCameraToProgress(delta) {
+    function constrainCameraToProgress(delta, recalculateProgress) {
         if (!path) {
             return;
         }
         const camera = getCamera(viewMatrix);
-        pathProgress = findProgress(path, camera.position);
+        if (recalculateProgress) {
+            pathProgress = findProgress(path, camera.position);
+        }
         if (delta) {
             pathProgress += delta;
             pathProgress = Math.max(0, Math.min(1, pathProgress));
@@ -1171,7 +1173,7 @@ async function main() {
         viewMatrix = getViewMatrix(camera);
     }
 
-    async function changeProgressAsync(delta) {
+    async function changeProgressAsync(delta, recalculateProgress) {
         delta *= sceneConstant.wheelScale;
         const tolerance = 0.001;
         if (Math.abs(pathProgress - 1) <= tolerance && delta > 0 && sceneConstant.next && !isLoading) {
@@ -1181,7 +1183,7 @@ async function main() {
             await openOnlineModelAsync(sceneConstant.previous, 1, carousel);
             await loadOnlineModelAsync();
         } else {
-            constrainCameraToProgress(delta);    
+            constrainCameraToProgress(delta, recalculateProgress);   
         }
     }
     // #region Camera
@@ -1461,7 +1463,7 @@ async function main() {
                 viewMatrix = invert4(inv);
             } else {
                 const delta = e.deltaY * scale;
-                await changeProgressAsync(delta);
+                await changeProgressAsync(delta, true);
             }
         },
         { passive: false },
@@ -1676,12 +1678,12 @@ async function main() {
         }
         if (activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
             viewMatrix = invert4(inv);
-            changeProgressAsync(50);//do not need await
+            changeProgressAsync(50, false);//do not need await
             inv = invert4(viewMatrix);
         }
         if (activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
             viewMatrix = invert4(inv);
-            changeProgressAsync(-50);//do not need await
+            changeProgressAsync(-50, false);//do not need await
             inv = invert4(viewMatrix);
         }
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
