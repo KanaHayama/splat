@@ -1975,7 +1975,7 @@ async function main() {
     document.addEventListener("drop", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const append = e.shiftKey || e.ctrlKey || e.metaKey;
+        const append = e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
         selectFile(e.dataTransfer.files[0], append);
     });
     // #endregion File Drop
