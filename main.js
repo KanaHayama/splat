@@ -1243,6 +1243,15 @@ async function main() {
         createButtonStyleUpdater(lobbyButton, "ict_floor2_lobby.splat"),
         createButtonStyleUpdater(kitchenButton, "ict_floor2_kitchen.splat"),
     ];
+
+    let isOffcanvasOpen = false;
+    const offcanvasElement = document.getElementById('postersOffcanvas');
+    offcanvasElement.addEventListener('show.bs.offcanvas', function () {
+        isOffcanvasOpen = true;
+    });
+    offcanvasElement.addEventListener('hidden.bs.offcanvas', function () {
+        isOffcanvasOpen = false;
+    });
     // #endregion Navigation Elements
 
     try {
@@ -1457,6 +1466,9 @@ async function main() {
     window.addEventListener(
         "wheel",
         async (e) => {
+            if (isOffcanvasOpen) {
+                return;
+            }
             carousel = false;
             e.preventDefault();
             const lineHeight = 10;

@@ -229,3 +229,7 @@ body.nohf .cube-face {
     height: 100px; /* Double height */
     line-height: 100px; /* Adjust line height to vertically center text */
 }
+
+.offcanvas-size {
+    --bs-offcanvas-width: min(80vw, 1024px) !important;
+}
