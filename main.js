@@ -1612,45 +1612,45 @@ async function main() {
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
-                // alert('beep')
-                const dtheta =
-                    Math.atan2(startY - altY, startX - altX) -
-                    Math.atan2(
-                        e.touches[0].clientY - e.touches[1].clientY,
-                        e.touches[0].clientX - e.touches[1].clientX,
-                    );
-                const dscale =
-                    Math.hypot(startX - altX, startY - altY) /
-                    Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY,
-                    );
-                const dx =
-                    (e.touches[0].clientX +
-                        e.touches[1].clientX -
-                        (startX + altX)) /
-                    2;
-                const dy =
-                    (e.touches[0].clientY +
-                        e.touches[1].clientY -
-                        (startY + altY)) /
-                    2;
-                let inv = invert4(viewMatrix);
-                // inv = translate4(inv,  0, 0, d);
-                inv = rotate4(inv, dtheta, 0, 0, 1);
+                // // alert('beep')
+                // const dtheta =
+                //     Math.atan2(startY - altY, startX - altX) -
+                //     Math.atan2(
+                //         e.touches[0].clientY - e.touches[1].clientY,
+                //         e.touches[0].clientX - e.touches[1].clientX,
+                //     );
+                // const dscale =
+                //     Math.hypot(startX - altX, startY - altY) /
+                //     Math.hypot(
+                //         e.touches[0].clientX - e.touches[1].clientX,
+                //         e.touches[0].clientY - e.touches[1].clientY,
+                //     );
+                // const dx =
+                //     (e.touches[0].clientX +
+                //         e.touches[1].clientX -
+                //         (startX + altX)) /
+                //     2;
+                // const dy =
+                //     (e.touches[0].clientY +
+                //         e.touches[1].clientY -
+                //         (startY + altY)) /
+                //     2;
+                // let inv = invert4(viewMatrix);
+                // // inv = translate4(inv,  0, 0, d);
+                // inv = rotate4(inv, dtheta, 0, 0, 1);
 
-                inv = translate4(inv, -dx / innerWidth, -dy / innerHeight, 0);
+                // inv = translate4(inv, -dx / innerWidth, -dy / innerHeight, 0);
 
-                // let preY = inv[13];
-                inv = translate4(inv, 0, 0, 3 * (1 - dscale));
-                // inv[13] = preY;
+                // // let preY = inv[13];
+                // inv = translate4(inv, 0, 0, 3 * (1 - dscale));
+                // // inv[13] = preY;
 
-                viewMatrix = invert4(inv);
+                // viewMatrix = invert4(inv);
 
-                startX = e.touches[0].clientX;
-                altX = e.touches[1].clientX;
-                startY = e.touches[0].clientY;
-                altY = e.touches[1].clientY;
+                // startX = e.touches[0].clientX;
+                // altX = e.touches[1].clientX;
+                // startY = e.touches[0].clientY;
+                // altY = e.touches[1].clientY;
             }
         },
         { passive: false },
