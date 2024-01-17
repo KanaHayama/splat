@@ -231,5 +231,24 @@ body.nohf .cube-face {
 }
 
 .offcanvas-size {
-    --bs-offcanvas-width: min(80vw, 1024px) !important;
+    --bs-offcanvas-width: 100% !important;
+}
+
+.offcanvas-body > div {
+    display: flex;
+    flex-wrap: wrap;
+	align-items: center;
+    gap: 10px;
+}
+
+.offcanvas-body > div > a > img {
+    max-width: 640px;
+    width: 30vw;
+    height: auto;
+}
+
+@media screen and (max-width: 1024px) {
+    .offcanvas-body > div > a > img {
+        width: 100%;
+    }
 }
