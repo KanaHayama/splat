@@ -1530,14 +1530,14 @@ async function main() {
         e.preventDefault();
         startX = e.clientX;
         startY = e.clientY;
-        down = e.ctrlKey || e.metaKey ? 2 : 1;
+        down = 1;//down = e.ctrlKey || e.metaKey ? 2 : 1;
     });
     canvas.addEventListener("contextmenu", (e) => {
         carousel = false;
         e.preventDefault();
-        startX = e.clientX;
-        startY = e.clientY;
-        down = 2;
+        // startX = e.clientX;
+        // startY = e.clientY;
+        // down = 2;
     });
 
     canvas.addEventListener("mousemove", (e) => {
