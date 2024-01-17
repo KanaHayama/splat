@@ -1605,7 +1605,7 @@ async function main() {
             if (e.touches.length === 1 && down) {
                 let inv = invert4(viewMatrix);
                 let dx = (4 * (e.touches[0].clientX - startX)) / innerWidth;
-                let dy = (4 * (e.touches[0].clientY - startY)) / innerHeight;
+                let dy = (3 * (e.touches[0].clientY - startY)) / innerHeight;
                 inv = rotate4_walk(inv, dx, 0, 1, 0);
                 inv = rotate4(inv, -dy, 1, 0, 0);
                 viewMatrix = invert4(inv);
