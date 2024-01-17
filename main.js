@@ -1692,57 +1692,57 @@ async function main() {
         let inv = invert4(viewMatrix);
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
-        if (freeMove && activeKeys.includes("KeyW") || activeKeys.includes("S-KeyW")) {
+        if (activeKeys.includes("KeyW") || activeKeys.includes("S-KeyW")) {
             inv = translate4_walk(inv, 0, 0, 0.1);
         }
-        if (freeMove && activeKeys.includes("KeyS") || activeKeys.includes("S-KeyS")) {
+        if (activeKeys.includes("KeyS") || activeKeys.includes("S-KeyS")) {
             inv = translate4_walk(inv, 0, 0, -0.1);
         }
-        if (freeMove && activeKeys.includes("KeyA") || activeKeys.includes("S-KeyA")) {
+        if (activeKeys.includes("KeyA") || activeKeys.includes("S-KeyA")) {
             inv = translate4_walk(inv, -0.05, 0, 0);
         }
-        if (freeMove && activeKeys.includes("KeyD") || activeKeys.includes("S-KeyD")) {
+        if (activeKeys.includes("KeyD") || activeKeys.includes("S-KeyD")) {
             inv = translate4_walk(inv, 0.05, 0, 0);
         }
-        if (freeMove && activeKeys.includes("KeyQ") || activeKeys.includes("S-KeyQ")) {
+        if (activeKeys.includes("KeyQ") || activeKeys.includes("S-KeyQ")) {
             inv = translate4(inv, 0, 0.05, 0);
         }
-        if (freeMove && activeKeys.includes("KeyE") || activeKeys.includes("S-KeyE")) {
+        if (activeKeys.includes("KeyE") || activeKeys.includes("S-KeyE")) {
             inv = translate4(inv, 0, -0.05, 0);
         }
-        if (freeMove && activeKeys.includes("KeyC") || activeKeys.includes("S-KeyC")) {
+        if (activeKeys.includes("KeyC") || activeKeys.includes("S-KeyC")) {
             inv = rotate4(inv, 0.01, 0, 0, 1);
         }
-        if (freeMove && activeKeys.includes("KeyZ") || activeKeys.includes("S-KeyZ")) {
+        if (activeKeys.includes("KeyZ") || activeKeys.includes("S-KeyZ")) {
             inv = rotate4(inv, -0.01, 0, 0, 1);
         }
-        if (freeMove && activeKeys.includes("KeyX") || activeKeys.includes("S-KeyX")) {
+        if (activeKeys.includes("KeyX") || activeKeys.includes("S-KeyX")) {
             ;
         }
-        if (freeMove && activeKeys.includes("ArrowLeft") || activeKeys.includes("S-ArrowLeft")) {
+        if (activeKeys.includes("ArrowLeft") || activeKeys.includes("S-ArrowLeft")) {
             inv = rotate4_walk(inv, -0.01, 0, 1, 0);
         }
-        if (freeMove && activeKeys.includes("ArrowRight") || activeKeys.includes("S-ArrowRight")) {
+        if (activeKeys.includes("ArrowRight") || activeKeys.includes("S-ArrowRight")) {
             inv = rotate4_walk(inv, 0.01, 0, 1, 0);
         }
-        if (freeMove && activeKeys.includes("ArrowUp") || activeKeys.includes("S-ArrowUp")) {
+        if (activeKeys.includes("ArrowUp") || activeKeys.includes("S-ArrowUp")) {
             inv = rotate4(inv, 0.005, 1, 0, 0);
         }
-        if (freeMove && activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
+        if (activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
             inv = rotate4(inv, -0.005, 1, 0, 0);
         }
-        if (freeMove && activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
+        if (activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
             viewMatrix = invert4(inv);
             changeProgressAsync(50, false);//do not need await
             inv = invert4(viewMatrix);
         }
-        if (freeMove && activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
+        if (activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
             viewMatrix = invert4(inv);
             changeProgressAsync(-50, false);//do not need await
             inv = invert4(viewMatrix);
         }
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-        // let isJumping = freeMove && activeKeys.includes("Space") || activeKeys.includes("S-Space");
+        // let isJumping = activeKeys.includes("Space") || activeKeys.includes("S-Space");
         for (let gamepad of gamepads) {
             if (!gamepad) continue;
 
