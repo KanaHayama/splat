@@ -1252,6 +1252,19 @@ async function main() {
     offcanvasElement.addEventListener('hidden.bs.offcanvas', function () {
         isOffcanvasOpen = false;
     });
+
+    let freeMove = false;
+    const keyboardLayoutContainer = document.getElementById('keyboard-layout-container');
+    keyboardLayoutContainer.addEventListener('show.bs.collapse', function () {
+    });
+    keyboardLayoutContainer.addEventListener('shown.bs.collapse', function () {
+        freeMove = true;
+    });
+    keyboardLayoutContainer.addEventListener('hide.bs.collapse', function () {
+        freeMove = false;
+    });
+    keyboardLayoutContainer.addEventListener('hidden.bs.collapse', function () {
+    });
     // #endregion Navigation Elements
 
     try {
@@ -1440,7 +1453,9 @@ async function main() {
     });
 
     window.addEventListener("keydown", async (e) => {
-        // if (document.activeElement != document.body) return;
+        if (!freeMove) {
+            return;
+        }
         carousel = false;
         if (!activeKeys.includes(e.code)) activeKeys.push(e.code);
         if (/(?<!F)\d/.test(e.key)) {
@@ -1677,57 +1692,57 @@ async function main() {
         let inv = invert4(viewMatrix);
         let shiftKey = activeKeys.includes("Shift") || activeKeys.includes("ShiftLeft") || activeKeys.includes("ShiftRight")
 
-        if (activeKeys.includes("KeyW") || activeKeys.includes("S-KeyW")) {
+        if (freeMove && activeKeys.includes("KeyW") || activeKeys.includes("S-KeyW")) {
             inv = translate4_walk(inv, 0, 0, 0.1);
         }
-        if (activeKeys.includes("KeyS") || activeKeys.includes("S-KeyS")) {
+        if (freeMove && activeKeys.includes("KeyS") || activeKeys.includes("S-KeyS")) {
             inv = translate4_walk(inv, 0, 0, -0.1);
         }
-        if (activeKeys.includes("KeyA") || activeKeys.includes("S-KeyA")) {
+        if (freeMove && activeKeys.includes("KeyA") || activeKeys.includes("S-KeyA")) {
             inv = translate4_walk(inv, -0.05, 0, 0);
         }
-        if (activeKeys.includes("KeyD") || activeKeys.includes("S-KeyD")) {
+        if (freeMove && activeKeys.includes("KeyD") || activeKeys.includes("S-KeyD")) {
             inv = translate4_walk(inv, 0.05, 0, 0);
         }
-        if (activeKeys.includes("KeyQ") || activeKeys.includes("S-KeyQ")) {
+        if (freeMove && activeKeys.includes("KeyQ") || activeKeys.includes("S-KeyQ")) {
             inv = translate4(inv, 0, 0.05, 0);
         }
-        if (activeKeys.includes("KeyE") || activeKeys.includes("S-KeyE")) {
+        if (freeMove && activeKeys.includes("KeyE") || activeKeys.includes("S-KeyE")) {
             inv = translate4(inv, 0, -0.05, 0);
         }
-        if (activeKeys.includes("KeyC") || activeKeys.includes("S-KeyC")) {
+        if (freeMove && activeKeys.includes("KeyC") || activeKeys.includes("S-KeyC")) {
             inv = rotate4(inv, 0.01, 0, 0, 1);
         }
-        if (activeKeys.includes("KeyZ") || activeKeys.includes("S-KeyZ")) {
+        if (freeMove && activeKeys.includes("KeyZ") || activeKeys.includes("S-KeyZ")) {
             inv = rotate4(inv, -0.01, 0, 0, 1);
         }
-        if (activeKeys.includes("KeyX") || activeKeys.includes("S-KeyX")) {
+        if (freeMove && activeKeys.includes("KeyX") || activeKeys.includes("S-KeyX")) {
             ;
         }
-        if (activeKeys.includes("ArrowLeft") || activeKeys.includes("S-ArrowLeft")) {
+        if (freeMove && activeKeys.includes("ArrowLeft") || activeKeys.includes("S-ArrowLeft")) {
             inv = rotate4_walk(inv, -0.01, 0, 1, 0);
         }
-        if (activeKeys.includes("ArrowRight") || activeKeys.includes("S-ArrowRight")) {
+        if (freeMove && activeKeys.includes("ArrowRight") || activeKeys.includes("S-ArrowRight")) {
             inv = rotate4_walk(inv, 0.01, 0, 1, 0);
         }
-        if (activeKeys.includes("ArrowUp") || activeKeys.includes("S-ArrowUp")) {
+        if (freeMove && activeKeys.includes("ArrowUp") || activeKeys.includes("S-ArrowUp")) {
             inv = rotate4(inv, 0.005, 1, 0, 0);
         }
-        if (activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
+        if (freeMove && activeKeys.includes("ArrowDown") || activeKeys.includes("S-ArrowDown")) {
             inv = rotate4(inv, -0.005, 1, 0, 0);
         }
-        if (activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
+        if (freeMove && activeKeys.includes("NumpadAdd") || activeKeys.includes("S-NumpadAdd")) {
             viewMatrix = invert4(inv);
             changeProgressAsync(50, false);//do not need await
             inv = invert4(viewMatrix);
         }
-        if (activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
+        if (freeMove && activeKeys.includes("NumpadSubtract") || activeKeys.includes("S-NumpadSubtract")) {
             viewMatrix = invert4(inv);
             changeProgressAsync(-50, false);//do not need await
             inv = invert4(viewMatrix);
         }
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-        let isJumping = activeKeys.includes("Space");
+        let isJumping = freeMove && activeKeys.includes("Space") || activeKeys.includes("S-Space");
         for (let gamepad of gamepads) {
             if (!gamepad) continue;
 
