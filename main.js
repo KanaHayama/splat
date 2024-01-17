@@ -1742,7 +1742,7 @@ async function main() {
             inv = invert4(viewMatrix);
         }
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-        let isJumping = freeMove && activeKeys.includes("Space") || activeKeys.includes("S-Space");
+        // let isJumping = freeMove && activeKeys.includes("Space") || activeKeys.includes("S-Space");
         for (let gamepad of gamepads) {
             if (!gamepad) continue;
 
@@ -1796,10 +1796,10 @@ async function main() {
             }
             leftGamepadTrigger = gamepad.buttons[4].pressed;
             rightGamepadTrigger = gamepad.buttons[5].pressed;
-            if (gamepad.buttons[0].pressed) {
-                isJumping = true;
-                carousel = false;
-            }
+            // if (gamepad.buttons[0].pressed) {
+            //     isJumping = true;
+            //     carousel = false;
+            // }
             if(gamepad.buttons[3].pressed){
                 carousel = true;
             }
@@ -1844,16 +1844,16 @@ async function main() {
             viewMatrix = invert4(inv);
         }
 
-        if (isJumping) {
-            jumpDelta = Math.min(1, jumpDelta + 0.05);
-        } else {
-            jumpDelta = Math.max(0, jumpDelta - 0.05);
-        }
+        // if (isJumping) {
+        //     jumpDelta = Math.min(1, jumpDelta + 0.05);
+        // } else {
+        //     jumpDelta = Math.max(0, jumpDelta - 0.05);
+        // }
 
-        let inv2 = invert4(viewMatrix);
-        inv2 = translate4(inv2, 0, -jumpDelta, 0);
-        inv2 = rotate4(inv2, -0.1 * jumpDelta, 1, 0, 0);
-        let actualViewMatrix = invert4(inv2);
+        // let inv2 = invert4(viewMatrix);
+        // inv2 = translate4(inv2, 0, -jumpDelta, 0);
+        // inv2 = rotate4(inv2, -0.1 * jumpDelta, 1, 0, 0);
+        let actualViewMatrix = viewMatrix;//let actualViewMatrix = invert4(inv2);
 
         const viewProj = multiply4(projectionMatrix, actualViewMatrix);
         worker.postMessage({ view: viewProj });
