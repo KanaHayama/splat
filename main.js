@@ -1414,7 +1414,11 @@ async function main() {
     // #region Basic Inputs
     let activeKeys = [];
 
-    const buttonSimulatedKeys = document.querySelectorAll('.key');
+    const forwardButton = document.getElementById("forward-button");
+    const backwardButton = document.getElementById("backward-button");
+    const buttonSimulatedKeys = [ ...document.querySelectorAll('.key'), ];
+    buttonSimulatedKeys.push(forwardButton);
+    buttonSimulatedKeys.push(backwardButton);
     buttonSimulatedKeys.forEach(button => {
         const keyName = button.getAttribute('data-key');
         const simulatedKeyName = "S-" + keyName;
