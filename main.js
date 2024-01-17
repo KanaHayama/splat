@@ -1459,8 +1459,8 @@ async function main() {
         carousel = false;
         if (!activeKeys.includes(e.code)) activeKeys.push(e.code);
         if (/(?<!F)\d/.test(e.key)) {
-            camera = cameras[parseInt(e.key)];
-            viewMatrix = getViewMatrix(camera);
+            // camera = cameras[parseInt(e.key)];
+            // viewMatrix = getViewMatrix(camera);
         }
         if (e.code == "KeyV") {
             location.hash =
